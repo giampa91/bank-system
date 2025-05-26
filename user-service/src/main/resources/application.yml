@@ -1,0 +1,27 @@
+# src/main/resources/application.yml
+# ...
+spring:
+  application:
+    name: user-service
+  # ...
+  datasource:
+    url: jdbc:h2:mem:bankdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 1800000
+  # You can remove or keep the jpa section. If you're explicitly using JDBC,
+  # the jpa properties won't be used, but having them won't necessarily cause issues
+  # unless you have conflicting JPA-specific beans.
+  # For clarity, if you are truly only using JDBC, you could remove this:
+  # jpa:
+  #   hibernate:
+  #     ddl-auto: update
+  #   database-platform: org.hibernate.dialect.H2Dialect
+  #   show-sql: true
+  # ... rest of your Kafka and other configurations

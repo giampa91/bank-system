@@ -1,0 +1,31 @@
+server:
+  port: 8080 # The port where your Gateway will listen
+
+spring:
+  application:
+    name: gateway-service # Name of this Gateway service for Eureka
+
+  main:
+    web-application-type: reactive
+  # cloud:
+  #   gateway:
+  #     discovery.locator:
+  #       enabled: false # Explicitly disable if all routes are defined programmatically
+  #       lower-case-service-id: true
+
+#eureka:
+#  client:
+#    serviceUrl:
+#      defaultZone: http://localhost:8761/eureka/ # Address of your Eureka Discovery Server
+#  instance:
+#    hostname: gateway-service # Hostname for this Gateway service in Eureka
+#
+#logging:
+#  level:
+#    com.bank.system: INFO
+#    org.springframework.cloud.gateway: DEBUG
+#    org.springframework.web: DEBUG # Relevant for MVC-based gateway logging
+#  pattern:
+#    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}] %-40.40logger{39} : %m%n"
+
+

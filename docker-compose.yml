@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  # ... existing services (zookeeper, kafka, postgresql, elasticsearch, logstash, kibana, eureka-server, api-gateway, ui-service, user-service) ...
+
+  payment-service:
+    build: ./payment-service # Assuming your Dockerfile is in payment-service directory
+    container_name: payment-service
+    ports:
+      - "8082:8082" # Expose Payment Service port (optional, if direct access needed for testing)
+    environment:
+      SPRING_APPLICATION_NAME: payment-service
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/bankdb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      LOGGING_LEVEL_COM_BANK_SYSTEM: DEBUG
+    depends_on:
+      - postgresql
+      - kafka
+      - eureka-server
+    # Add network if necessary, but default bridge network usually works for same-compose services
