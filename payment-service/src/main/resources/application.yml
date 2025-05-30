@@ -15,10 +15,7 @@ spring:
       minimum-idle: 2
       idle-timeout: 300000
       max-lifetime: 1800000
-  # You can remove or keep the jpa section. If you're explicitly using JDBC,
-  # the jpa properties won't be used, but having them won't necessarily cause issues
-  # unless you have conflicting JPA-specific beans.
-  # For clarity, if you are truly only using JDBC, you could remove this:
+
   # jpa:
   #   hibernate:
   #     ddl-auto: update
@@ -26,5 +23,13 @@ spring:
   #   show-sql: true
   # ... rest of your Kafka and other configurations
   kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer # THIS IS THE KEY LINE
     consumer:
       group-id: consumer-group-id
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.trusted.packages: "com.bank.system.payment_service.dto.*" # Crucial for JSON deserialization

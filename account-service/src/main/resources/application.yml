@@ -27,7 +27,7 @@ spring:
   # ... rest of your Kafka and other configurations
 
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml # Path to your master changelog file
+    change-log: classpath:db/changelog/db.changelog-master.sql # Path to your master changelog file
     enabled: true # Explicitly enable Liquibase (it's true by default if starter is present)
 
 

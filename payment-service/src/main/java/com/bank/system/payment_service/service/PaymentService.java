@@ -21,13 +21,11 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentProducer paymentProducer;
-    // Removed: private final PaymentMapper paymentMapper;
 
     public PaymentService(PaymentRepository paymentRepository,
                           PaymentProducer paymentProducer) {
         this.paymentRepository = paymentRepository;
         this.paymentProducer = paymentProducer;
-        // Removed: this.paymentMapper = paymentMapper;
     }
 
     /**

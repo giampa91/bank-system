@@ -6,6 +6,7 @@ import com.bank.system.payment_service.dto.PaymentFailedEvent;
 import com.bank.system.payment_service.dto.PaymentInitiatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
@@ -15,15 +16,15 @@ import java.util.concurrent.CompletableFuture; // Keep this import
 @Component
 public class PaymentProducer {
 
-    public static final String CREDIT_FAILED_TOPIC = "creadit-failed-topic";
+    public static final String CREDIT_FAILED_TOPIC = "credit-failed-topic";
     private static final Logger log = LoggerFactory.getLogger(PaymentProducer.class);
     private static final String PAYMENT_INITIATED_TOPIC = "payment-initiated-topic";
     private static final String PAYMENT_COMPLETED_TOPIC = "payment-completed-topic";
     public static final String PAYMENT_FAILED_TOPIC = "payment-failed-topic";
 
-
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Autowired
     public PaymentProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }

@@ -1,23 +1,86 @@
 version: '3.8'
+
 services:
+  kafka:
+    image: docker.io/bitnami/kafka:4.0
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+
+  # PostgreSQL Database Service
+  postgres-db:
+    image: postgres:16 # Using PostgreSQL version 16. You can choose other versions like 15, 14, etc.
+    container_name: account_service_postgres # A friendly name for your container instance
+    restart: always # Ensures the container restarts if it stops unexpectedly
+    ports:
+      - "5432:5432" # Maps port 5432 on your host machine to port 5432 inside the container
+      # This is how your Spring Boot app (running on your host) will connect to it via `localhost:5432`
+    environment:
+      # These environment variables configure the PostgreSQL container.
+      # MAKE SURE THESE MATCH THE VALUES IN YOUR application.yml!
+      POSTGRES_DB: your_database_name   # The name of the database to be created
+      POSTGRES_USER: your_username      # The username for the database superuser
+      POSTGRES_PASSWORD: your_password  # The password for the database superuser
+    volumes:
+      # This creates a named Docker volume to persist your PostgreSQL data.
+      # Data will not be lost if you stop and remove the container, only if you remove the volume.
+      - postgres_data:/var/lib/postgresql/data
+      # Optional: Uncomment if you have SQL initialization scripts
+      # - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck: # A basic health check to ensure the database is fully ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s # Check every 5 seconds
+      timeout: 5s  # Wait up to 5 seconds for a response
+      retries: 5   # Retry 5 times before marking as unhealthy
+
+  # You can add other services to this file as your system grows, for example:
+  # eureka-server:
+  #   image: springcloud/eureka
+  #   container_name: eureka_server
+  #   ports:
+  #     - "8761:8761"
+  #   depends_on:
+  #     - postgres-db # Example: Eureka might depend on a database if it uses one
+
+# Define the named volume(s) used by your services
+volumes:
+  postgres_data: {} # Declares the 'postgres_data' named volume
+  kafka_data:
+    driver: local
+    # Optional: Define networks if you have multiple services that need to communicate with each other
+    # networks:
+    #   my_app_network:
+    #     driver: bridge
   # ... existing services (zookeeper, kafka, postgresql, elasticsearch, logstash, kibana, eureka-server, api-gateway, ui-service, user-service) ...
 
-  payment-service:
-    build: ./payment-service # Assuming your Dockerfile is in payment-service directory
-    container_name: payment-service
-    ports:
-      - "8082:8082" # Expose Payment Service port (optional, if direct access needed for testing)
-    environment:
-      SPRING_APPLICATION_NAME: payment-service
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/bankdb
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      LOGGING_LEVEL_COM_BANK_SYSTEM: DEBUG
-    depends_on:
-      - postgresql
-      - kafka
-      - eureka-server
+#  payment-service:
+#    build: ./payment-service # Assuming your Dockerfile is in payment-service directory
+#    container_name: payment-service
+#    ports:
+#      - "8082:8082" # Expose Payment Service port (optional, if direct access needed for testing)
+#    environment:
+#      SPRING_APPLICATION_NAME: payment-service
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/bankdb
+#      SPRING_DATASOURCE_USERNAME: user
+#      SPRING_DATASOURCE_PASSWORD: password
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#      LOGGING_LEVEL_COM_BANK_SYSTEM: DEBUG
+#    depends_on:
+#      - postgresql
+#      - kafka
+#      - eureka-server
     # Add network if necessary, but default bridge network usually works for same-compose services
