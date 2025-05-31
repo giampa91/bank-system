@@ -1,4 +1,4 @@
-package com.bank.system.payment_service.dto;
+package com.bank.system.dtos.dto;
 
 import java.time.Instant;
 import java.util.Objects;

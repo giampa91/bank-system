@@ -1,20 +1,20 @@
-package com.bank.system.payment_service.dto;
+package com.bank.system.dtos.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
-public class ReceiverCreditedEvent {
+public class ReceiverCreditRequestEvent {
     private String paymentId;
     private String accountId;
     private BigDecimal creditedAmount;
     private String currency;
     private Instant timestamp;
 
-    public ReceiverCreditedEvent() {
+    public ReceiverCreditRequestEvent() {
     }
 
-    public ReceiverCreditedEvent(String paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
+    public ReceiverCreditRequestEvent(String paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
         this.creditedAmount = creditedAmount;
@@ -66,7 +66,7 @@ public class ReceiverCreditedEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ReceiverCreditedEvent that = (ReceiverCreditedEvent) o;
+        ReceiverCreditRequestEvent that = (ReceiverCreditRequestEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
                 Objects.equals(creditedAmount, that.creditedAmount) &&

@@ -1,7 +1,7 @@
 package com.bank.system.payment_service.controller;
 
+import com.bank.system.dtos.dto.*;
 import com.bank.system.payment_service.domain.Payment;
-import com.bank.system.payment_service.dto.PaymentRequestDTO;
 import com.bank.system.payment_service.service.PaymentService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;

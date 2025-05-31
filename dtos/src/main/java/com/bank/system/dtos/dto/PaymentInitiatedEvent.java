@@ -1,33 +1,37 @@
-package com.bank.system.payment_service.dto;
+package com.bank.system.dtos.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Objects;
 
-public class PaymentRequestDTO {
-    @NotBlank
+public class PaymentInitiatedEvent {
+    private String paymentId;
     private String senderAccountId;
-    @NotBlank
     private String receiverAccountId;
-    @NotNull
-    @DecimalMin(value = "0.01", inclusive = true)
     private BigDecimal amount;
-    @NotBlank
     private String currency;
-    @NotBlank
-    private String idempotencyKey; // For idempotency
+    private String idempotencyKey;
+    private Instant timestamp;
 
-    public PaymentRequestDTO() {
+    public PaymentInitiatedEvent() {
     }
 
-    public PaymentRequestDTO(String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey) {
+    public PaymentInitiatedEvent(String paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey, Instant timestamp) {
+        this.paymentId = paymentId;
         this.senderAccountId = senderAccountId;
         this.receiverAccountId = receiverAccountId;
         this.amount = amount;
         this.currency = currency;
         this.idempotencyKey = idempotencyKey;
+        this.timestamp = timestamp;
+    }
+
+    public String getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
     }
 
     public String getSenderAccountId() {
@@ -70,31 +74,43 @@ public class PaymentRequestDTO {
         this.idempotencyKey = idempotencyKey;
     }
 
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PaymentRequestDTO that = (PaymentRequestDTO) o;
-        return Objects.equals(senderAccountId, that.senderAccountId) &&
+        PaymentInitiatedEvent that = (PaymentInitiatedEvent) o;
+        return Objects.equals(paymentId, that.paymentId) &&
+                Objects.equals(senderAccountId, that.senderAccountId) &&
                 Objects.equals(receiverAccountId, that.receiverAccountId) &&
                 Objects.equals(amount, that.amount) &&
                 Objects.equals(currency, that.currency) &&
-                Objects.equals(idempotencyKey, that.idempotencyKey);
+                Objects.equals(idempotencyKey, that.idempotencyKey) &&
+                Objects.equals(timestamp, that.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(senderAccountId, receiverAccountId, amount, currency, idempotencyKey);
+        return Objects.hash(paymentId, senderAccountId, receiverAccountId, amount, currency, idempotencyKey, timestamp);
     }
 
     @Override
     public String toString() {
-        return "PaymentRequestDTO{" +
-                "senderAccountId='" + senderAccountId + '\'' +
+        return "PaymentInitiatedEvent{" +
+                "paymentId='" + paymentId + '\'' +
+                ", senderAccountId='" + senderAccountId + '\'' +
                 ", receiverAccountId='" + receiverAccountId + '\'' +
                 ", amount=" + amount +
                 ", currency='" + currency + '\'' +
                 ", idempotencyKey='" + idempotencyKey + '\'' +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

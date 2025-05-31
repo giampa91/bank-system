@@ -33,7 +33,7 @@ public class PaymentRepository {
      */
     public CompletableFuture<Payment> save(Payment payment) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "INSERT INTO payments (id, payment_id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at) " +
+            String sql = "INSERT INTO payment (id, payment_id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -75,7 +75,7 @@ public class PaymentRepository {
     public CompletableFuture<Optional<Payment>> findByPaymentId(String paymentId) {
         return CompletableFuture.supplyAsync(() -> {
             String sql = "SELECT id, payment_id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at " +
-                    "FROM payments WHERE payment_id = ?";
+                    "FROM payment WHERE payment_id = ?";
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, paymentId);
@@ -101,7 +101,7 @@ public class PaymentRepository {
      */
     public CompletableFuture<Optional<Payment>> updateStatus(String paymentId, PaymentStatus newStatus) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "UPDATE payments SET status = ?, updated_at = ? WHERE payment_id = ?";
+            String sql = "UPDATE payment SET status = ?, updated_at = ? WHERE payment_id = ?";
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, newStatus.name());

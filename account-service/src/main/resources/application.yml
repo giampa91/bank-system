@@ -30,7 +30,22 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.sql # Path to your master changelog file
     enabled: true # Explicitly enable Liquibase (it's true by default if starter is present)
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-  databaseChangeLog:
-    - include:
-        file: db/changelog/changes/01-create-account-table.sql # Changed to .sql
+    consumer:
+      group-id: consumer-group-id
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+#        spring.json.type.mappings:
+#          com.bank.system.dto.SenderDebitedEvent:com.bank.system.dto.SenderDebitedEvent,
+#          com.bank.system.dto.ReceiverCreditEvent:com.bank.system.dto.ReceiverCreditEvent
+
+#    - include:
+#        file: db/changelog/changes/01-create-account-table.sql # Changed to .sql

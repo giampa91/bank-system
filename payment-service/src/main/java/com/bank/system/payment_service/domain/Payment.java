@@ -80,7 +80,7 @@ public class Payment {
         this.receiverAccountId = receiverAccountId;
         this.amount = amount;
         this.currency = currency;
-        this.status = PaymentStatus.PENDING;
+        this.status = PaymentStatus.INITIATED;
         this.idempotencyKey = idempotencyKey;
     }
 

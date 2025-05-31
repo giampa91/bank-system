@@ -1,18 +1,18 @@
-package com.bank.system.payment_service.dto;
+package com.bank.system.dtos.dto;
 
 import java.time.Instant;
 import java.util.Objects;
 
-public class DebitFailedEvent {
+public class CreditFailedEvent {
     private String paymentId;
     private String accountId;
     private String reason;
     private Instant timestamp;
 
-    public DebitFailedEvent() {
+    public CreditFailedEvent() {
     }
 
-    public DebitFailedEvent(String paymentId, String accountId, String reason, Instant timestamp) {
+    public CreditFailedEvent(String paymentId, String accountId, String reason, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
         this.reason = reason;
@@ -55,7 +55,7 @@ public class DebitFailedEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DebitFailedEvent that = (DebitFailedEvent) o;
+        CreditFailedEvent that = (CreditFailedEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
                 Objects.equals(reason, that.reason) &&
@@ -69,7 +69,7 @@ public class DebitFailedEvent {
 
     @Override
     public String toString() {
-        return "DebitFailedEvent{" +
+        return "CreditFailedEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", accountId='" + accountId + '\'' +
                 ", reason='" + reason + '\'' +
