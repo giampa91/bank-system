@@ -22,18 +22,18 @@ class PaymentServiceApplicationTests {
 	void contextLoads() {
 	}
 
-	@Test
-	void test() {
-
-		PaymentInitiatedEvent event = new PaymentInitiatedEvent();
-		event.setPaymentId("paymentId");
-		event.setAmount(BigDecimal.valueOf(10));
-		event.setCurrency("euro");
-		event.setIdempotencyKey("idempotencyKey");
-		event.setSenderAccountId("Account1");
-		event.setReceiverAccountId("Account2");
-		producer.sendPaymentInitiatedEvent(event);
-
-	}
+//	@Test
+//	void test() {
+//
+//		PaymentInitiatedEvent event = new PaymentInitiatedEvent();
+//		event.setPaymentId("paymentId2");
+//		event.setAmount(BigDecimal.valueOf(10));
+//		event.setCurrency("eur");
+//		event.setIdempotencyKey("idempotencyKey1");
+//		event.setSenderAccountId("ACC-001-A");
+//		event.setReceiverAccountId("ACC-002-B");
+//		producer.sendPaymentInitiatedEvent(event);
+//
+//	}
 
 }

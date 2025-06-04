@@ -1,6 +1,7 @@
 package com.bank.system.account_service.kafka;
 
 import com.bank.system.account_service.service.AccountService;
+import com.bank.system.dtos.dto.CompensatePaymentRequestEvent;
 import com.bank.system.dtos.dto.PaymentInitiatedEvent;
 import com.bank.system.dtos.dto.ReceiverCreditRequestEvent;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ public class AccountConsumer {
 
     private static final String PAYMENT_INITIATED_TOPIC = "payment-initiated-topic";
     private static final String RECEIVER_CREDITED_REQUESTED_TOPIC = "receiver-credited-requested-topic";
+    private static final String COMPENSATE_PAYMENT_REQEUST_TOPIC = "compensate-payment-request-topic";
 
     private final AccountService accountService;
 
@@ -36,6 +38,12 @@ public class AccountConsumer {
     public void listenReceiverCreditedRequestedEvent(ReceiverCreditRequestEvent event) {
         log.info("Consumed ReceiverCreditRequestEvent for paymentId: {}", event.getPaymentId());
         accountService.handleReceiverCreditRequestEvent(event);
+    }
+
+    @KafkaListener(topics = COMPENSATE_PAYMENT_REQEUST_TOPIC, groupId = "${" + AccountConsumer.SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
+    public void listenCompensatePaymentRequestEvent(CompensatePaymentRequestEvent event) {
+        log.info("Consumed CompensatePaymentEvent for paymentId: {}", event.getPaymentId());
+        accountService.handleCompensatePaymentRequestEvent(event);
     }
 
 }

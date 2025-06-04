@@ -81,7 +81,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.nutrition.workout</groupId>
+			<groupId>com.bank.system</groupId>
 			<artifactId>dtos</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>

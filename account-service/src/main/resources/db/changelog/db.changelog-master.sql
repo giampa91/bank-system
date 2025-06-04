@@ -6,7 +6,13 @@ CREATE TABLE account (
     account_number VARCHAR(255) NOT NULL UNIQUE,
     user_id BIGINT NOT NULL,
     balance DECIMAL(19, 2) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
 --rollback DROP TABLE account;
+
+INSERT INTO account (account_number, user_id, balance, created_at) VALUES
+('ACC-001-A', 101, 1500.75, CURRENT_TIMESTAMP());
+
+INSERT INTO account (account_number, user_id, balance, created_at) VALUES
+('ACC-002-B', 102, 2300.50, CURRENT_TIMESTAMP());

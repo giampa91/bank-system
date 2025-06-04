@@ -1,5 +1,6 @@
 package com.bank.system.payment_service.kafka;
 
+import com.bank.system.dtos.dto.CompensatePaymentEvent;
 import com.bank.system.dtos.dto.PaymentCompletedEvent;
 import com.bank.system.dtos.dto.PaymentInitiatedEvent;
 import com.bank.system.dtos.dto.ReceiverCreditRequestEvent;
@@ -18,10 +19,9 @@ public class PaymentProducer {
     private static final Logger log = LoggerFactory.getLogger(PaymentProducer.class);
 
     private static final String PAYMENT_COMPLETED_TOPIC = "payment-completed-topic";
-
     private static final String PAYMENT_INITIATED_TOPIC = "payment-initiated-topic";
-
     private static final String RECEIVER_CREDITED_REQUESTED_TOPIC = "receiver-credited-requested-topic";
+    private static final String COMPENSATE_PAYMENT_TOPIC = "compensate-payment-topic";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -67,6 +67,20 @@ public class PaymentProducer {
                                 event.getPaymentId(), result.getRecordMetadata().topic(), result.getRecordMetadata().offset());
                     } else {
                         log.error("Failed to send PaymentCompletedEvent for paymentId: {}. Reason: {}",
+                                event.getPaymentId(), ex.getMessage(), ex);
+                    }
+                });
+    }
+
+    public CompletableFuture<SendResult<String, Object>> sendCompensatePaymentEvent(CompensatePaymentEvent event) {
+        log.info("Sending CompensatePaymentEvent for paymentId: {}", event.getPaymentId());
+        return kafkaTemplate.send(COMPENSATE_PAYMENT_TOPIC, event.getPaymentId(), event)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("CompensatePaymentEvent sent successfully for paymentId: {} to topic {} with offset {}",
+                                event.getPaymentId(), result.getRecordMetadata().topic(), result.getRecordMetadata().offset());
+                    } else {
+                        log.error("Failed to send CompensatePaymentEvent for paymentId: {}. Reason: {}",
                                 event.getPaymentId(), ex.getMessage(), ex);
                     }
                 });

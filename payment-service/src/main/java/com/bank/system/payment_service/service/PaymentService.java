@@ -29,22 +29,17 @@ public class PaymentService {
 
     @Transactional
     public CompletableFuture<Payment> initiatePayment(PaymentRequestDTO requestDTO) {
-        return paymentRepository.findByPaymentId(requestDTO.getIdempotencyKey()) // Assuming idempotencyKey is used as paymentId for lookup
+        return paymentRepository.findByPaymentId(requestDTO.getIdempotencyKey())
                 .thenCompose(existingPaymentOpt -> {
                     if (existingPaymentOpt.isPresent()) {
                         Payment existingPayment = existingPaymentOpt.get();
                         log.warn("Payment with idempotencyKey {} already exists with status: {}",
                                 requestDTO.getIdempotencyKey(), existingPayment.getStatus());
-                        // Return existing payment if already processed or in progress
                         return CompletableFuture.completedFuture(existingPayment);
                     } else {
-                        // 2. Manually map DTO to Entity and set initial status
                         Payment payment = mapPaymentRequestDtoToPayment(requestDTO);
-                        // createdAt and updatedAt will be set by repository.save()
-                        // 3. Save payment to local database
                         return paymentRepository.save(payment)
                                 .thenCompose(savedPayment -> {
-                                    // 4. Manually map saved Payment to PaymentInitiatedEvent
                                     PaymentInitiatedEvent event = mapToPaymentInitiatedEvent(savedPayment);
                                     return paymentProducer.sendPaymentInitiatedEvent(event)
                                             .thenApply(sendResult -> {
@@ -58,7 +53,6 @@ public class PaymentService {
 
     private static Payment mapPaymentRequestDtoToPayment(PaymentRequestDTO requestDTO) {
         Payment payment = new Payment();
-        // payment.setId(UUID.randomUUID()); // ID will be set by repository.save()
         payment.setPaymentId(requestDTO.getIdempotencyKey()); // Use idempotency key as paymentId for simplicity
         payment.setSenderAccountId(requestDTO.getSenderAccountId());
         payment.setReceiverAccountId(requestDTO.getReceiverAccountId());
@@ -77,7 +71,7 @@ public class PaymentService {
         event.setAmount(savedPayment.getAmount());
         event.setCurrency(savedPayment.getCurrency());
         event.setIdempotencyKey(savedPayment.getIdempotencyKey());
-        event.setTimestamp(Instant.now()); // Set event timestamp
+        event.setTimestamp(Instant.now());
         return event;
     }
 
@@ -112,9 +106,55 @@ public class PaymentService {
                     if (updatedPaymentOpt.isPresent()) {
                         Payment payment = updatedPaymentOpt.get();
                         log.info("Payment {} status updated to COMPLETED. Publishing PaymentCompletedEvent.", event.getPaymentId());
-                        return sendPaymentCompletedEvent(payment); // Publish the final completion event
+                        return sendPaymentCompletedEvent(payment);
                     } else {
                         log.error("Failed to update payment status to COMPLETED for paymentId: {}. Payment not found.", event.getPaymentId());
+                        return CompletableFuture.completedFuture(null);
+                    }
+                });
+    }
+
+    @Transactional
+    public CompletableFuture<Void> handleCompensatePayment(CompensatePaymentEvent event) {
+        log.info("Received CompensatePaymentEvent for paymentId: {}", event.getPaymentId());
+        return paymentRepository.updateStatus(event.getPaymentId(), PaymentStatus.COMPLETED)
+                .thenCompose(updatedPaymentOpt -> {
+                    if (updatedPaymentOpt.isPresent()) {
+                        Payment payment = updatedPaymentOpt.get();
+                        log.info("Payment {} status updated to COMPLETED. Publishing PaymentCompletedEvent.", event.getPaymentId());
+                        return sendPaymentCompletedEvent(payment);
+                    } else {
+                        log.error("Failed to update payment status to COMPLETED for paymentId: {}. Payment not found.", event.getPaymentId());
+                        return CompletableFuture.completedFuture(null);
+                    }
+                });
+    }
+
+    @Transactional
+    public CompletableFuture<Void> handleDebitFailed(DebitFailedEvent event) {
+        log.info("Received DebitFailedEvent for paymentId: {}", event.getPaymentId());
+        return paymentRepository.updateStatus(event.getPaymentId(), PaymentStatus.DEBIT_FAILED)
+                .thenCompose(updatedPaymentOpt -> {
+                    if (updatedPaymentOpt.isPresent()) {
+                        log.info("Payment {} status updated to DEBIT_FAILED. Publishing PaymentCompletedEvent.", event.getPaymentId());
+                    } else {
+                        log.error("Failed to update payment status to DEBIT_FAILED for paymentId: {}. Payment not found.", event.getPaymentId());
+                    }
+                    return CompletableFuture.completedFuture(null);
+                });
+    }
+
+    @Transactional
+    public CompletableFuture<Void> handleCreditFailed(CreditFailedEvent event) {
+        log.info("Received DebitFailedEvent for paymentId: {}", event.getPaymentId());
+        return paymentRepository.updateStatus(event.getPaymentId(), PaymentStatus.CREDIT_FAILED)
+                .thenCompose(updatedPaymentOpt -> {
+                    if (updatedPaymentOpt.isPresent()) {
+                        Payment payment = updatedPaymentOpt.get();
+                        log.info("Payment {} status updated to CREDIT_FAILED. Publishing PaymentCompletedEvent.", event.getPaymentId());
+                        return sendPaymentCompletedEvent(payment);
+                    } else {
+                        log.error("Failed to update payment status to CREDIT_FAILED for paymentId: {}. Payment not found.", event.getPaymentId());
                         return CompletableFuture.completedFuture(null);
                     }
                 });
@@ -131,6 +171,19 @@ public class PaymentService {
                 });
     }
 
+    private CompletableFuture<Void> sendCompensatePaymentEventForCreditFailed(Payment payment) {
+        CompensatePaymentEvent event = mapPaymentToCompensatePaymentEvent(payment);
+        return paymentProducer.sendCompensatePaymentEvent(event)
+                .thenAccept(sendResult -> {
+                    log.info("CompensatePaymentEvent published for paymentId: {}", payment.getPaymentId());
+                })
+                .exceptionally(ex -> {
+                    log.error("Failed to publish CompensatePaymentEvent for paymentId {}: {}", payment.getPaymentId(), ex.getMessage(), ex);
+                    // Handle failure to publish completion event (e.g., retry, alert)
+                    return null;
+                });
+    }
+
     private static PaymentCompletedEvent mapPaymentToPaymentCompletedEvent(Payment payment) {
         PaymentCompletedEvent event = new PaymentCompletedEvent();
         event.setPaymentId(payment.getPaymentId());
@@ -138,6 +191,15 @@ public class PaymentService {
         event.setReceiverAccountId(payment.getReceiverAccountId());
         event.setAmount(payment.getAmount());
         event.setCurrency(payment.getCurrency());
+        event.setTimestamp(Instant.now());
+        return event;
+    }
+
+    private static CompensatePaymentEvent mapPaymentToCompensatePaymentEvent(Payment payment) {
+        CompensatePaymentEvent event = new CompensatePaymentEvent();
+        event.setPaymentId(payment.getPaymentId());
+        event.setAccountId(payment.getSenderAccountId());
+        payment.setAmount(payment.getAmount());
         event.setTimestamp(Instant.now());
         return event;
     }
