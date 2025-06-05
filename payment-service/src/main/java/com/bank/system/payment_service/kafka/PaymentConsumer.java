@@ -17,6 +17,7 @@ public class PaymentConsumer {
     public static final String SENDER_DEBITED_TOPIC = "sender-debited-topic";
     private static final String RECEIVER_CREDITED_TOPIC = "receiver-credited-topic";
     public static final String DEBIT_FAILED_TOPIC = "debit-failed-topic";
+    public static final String CREDIT_FAILED_TOPIC = "credit-failed-topic";
     public static final String COMPENSATE_PAYMENT_TOPIC = "compensate-payment-topic";
 
 
@@ -60,7 +61,7 @@ public class PaymentConsumer {
                 });
     }
 
-    @KafkaListener(topics = DEBIT_FAILED_TOPIC, groupId = "${" + SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
+    @KafkaListener(topics = CREDIT_FAILED_TOPIC, groupId = "${" + SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenCreditFailed(CreditFailedEvent event) {
         log.info("Consumed CreditFailedEvent for paymentId: {}", event.getPaymentId());
         paymentService.handleCreditFailed(event) // Assuming PaymentService has this method

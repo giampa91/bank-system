@@ -38,7 +38,9 @@ public class AccountService {
                         String errorMsg = String.format("Sender account %s not found for payment ID %s. Debit failed.", senderAccountId, paymentId);
                         log.error(errorMsg);
                         // In a real system, you might send a PaymentFailedEvent here
-                        return CompletableFuture.failedFuture(new RuntimeException(errorMsg));
+                        DebitFailedEvent debitFailedEvent = mapPaymentInitiatedEventToDebitFailedEvent(paymentInitiatedEvent, errorMsg);
+                        accountProducer.sendSenderDebitedFailedEvent(debitFailedEvent);
+                        return CompletableFuture.completedStage(null);
                     }
 
                     Account senderAccount = optionalAccount.get();
@@ -47,7 +49,9 @@ public class AccountService {
                                 senderAccountId, senderAccount.getBalance(), paymentId, debitAmount);
                         log.error(errorMsg);
                         // In a real system, you might send a PaymentFailedEvent here
-                        return CompletableFuture.failedFuture(new RuntimeException(errorMsg));
+                        DebitFailedEvent debitFailedEvent = mapPaymentInitiatedEventToDebitFailedEvent(paymentInitiatedEvent, errorMsg);
+                        accountProducer.sendSenderDebitedFailedEvent(debitFailedEvent);
+                        return CompletableFuture.completedStage(null);
                     }
 
                     BigDecimal newBalance = senderAccount.getBalance().subtract(debitAmount);
@@ -66,7 +70,9 @@ public class AccountService {
                                 } else {
                                     String errorMsg = String.format("Failed to update balance for sender account %s for payment ID %s. Account not found after initial check.", senderAccountId, paymentId);
                                     log.error(errorMsg);
-                                    return CompletableFuture.failedFuture(new RuntimeException(errorMsg));
+                                    DebitFailedEvent debitFailedEvent = mapPaymentInitiatedEventToDebitFailedEvent(paymentInitiatedEvent, errorMsg);
+                                    accountProducer.sendSenderDebitedFailedEvent(debitFailedEvent);
+                                    return CompletableFuture.completedStage(null);
                                 }
                             });
                 })
@@ -75,6 +81,15 @@ public class AccountService {
                     // This catches exceptions from findByAccountNumber, balance check, or updateBalance
                     return null; // Or rethrow if you want to propagate specific errors further
                 });
+    }
+
+    private static DebitFailedEvent mapPaymentInitiatedEventToDebitFailedEvent(PaymentInitiatedEvent paymentInitiatedEvent, String errorMsg) {
+        DebitFailedEvent debitFailedEvent = new DebitFailedEvent();
+        debitFailedEvent.setPaymentId(paymentInitiatedEvent.getPaymentId());
+        debitFailedEvent.setReason(errorMsg);
+        debitFailedEvent.setAccountId(paymentInitiatedEvent.getSenderAccountId());
+        debitFailedEvent.setTimestamp(Instant.now());
+        return debitFailedEvent;
     }
 
     public CompletableFuture<Void> handleReceiverCreditRequestEvent(ReceiverCreditRequestEvent receiverCreditRequestEvent) {
