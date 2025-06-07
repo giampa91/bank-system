@@ -42,7 +42,7 @@ public class PaymentConsumer {
     @KafkaListener(topics = RECEIVER_CREDITED_TOPIC, groupId = "${" + SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenReceiverCredited(ReceiverCreditEvent event) {
         log.info("Consumed ReceiverCreditedEvent for paymentId: {}", event.getPaymentId());
-        paymentService.handleReceiverCredited(event) // Assuming PaymentService has this method
+        paymentService.handleReceiverCredited(event)
                 .exceptionally(ex -> {
                     log.error("Error handling ReceiverCreditedEvent for paymentId {}: {}", event.getPaymentId(), ex.getMessage(), ex);
                     // Implement DLQ or retry logic here
@@ -53,7 +53,7 @@ public class PaymentConsumer {
     @KafkaListener(topics = DEBIT_FAILED_TOPIC, groupId = "${" + SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenDebitFailed(DebitFailedEvent event) {
         log.info("Consumed DebitFailedEvent for paymentId: {}", event.getPaymentId());
-        paymentService.handleDebitFailed(event) // Assuming PaymentService has this method
+        paymentService.handleDebitFailed(event)
                 .exceptionally(ex -> {
                     log.error("Error handling DebitFailedEvent for paymentId {}: {}", event.getPaymentId(), ex.getMessage(), ex);
                     // Implement DLQ or retry logic here
@@ -64,7 +64,7 @@ public class PaymentConsumer {
     @KafkaListener(topics = CREDIT_FAILED_TOPIC, groupId = "${" + SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenCreditFailed(CreditFailedEvent event) {
         log.info("Consumed CreditFailedEvent for paymentId: {}", event.getPaymentId());
-        paymentService.handleCreditFailed(event) // Assuming PaymentService has this method
+        paymentService.handleCreditFailed(event)
                 .exceptionally(ex -> {
                     log.error("Error handling CreditFailedEvent for paymentId {}: {}", event.getPaymentId(), ex.getMessage(), ex);
                     // Implement DLQ or retry logic here
@@ -75,7 +75,7 @@ public class PaymentConsumer {
     @KafkaListener(topics = COMPENSATE_PAYMENT_TOPIC, groupId = "${" + SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenCompensatePayment(CompensatePaymentEvent event) {
         log.info("Consumed ReceiverCreditedEvent for paymentId: {}", event.getPaymentId());
-        paymentService.handleCompensatePayment(event) // Assuming PaymentService has this method
+        paymentService.handleCompensatePayment(event)
                 .exceptionally(ex -> {
                     log.error("Error handling ReceiverCreditedEvent for paymentId {}: {}", event.getPaymentId(), ex.getMessage(), ex);
                     // Implement DLQ or retry logic here

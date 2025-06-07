@@ -167,9 +167,10 @@ public class AccountRepository {
                 if (affectedRows > 0) {
                     log.info("Account {} deleted successfully.", accountNumber);
                     return true;
+                } else {
+                    log.warn("Account {} not found for deletion.", accountNumber);
+                    return false;
                 }
-                log.warn("Account {} not found for deletion.", accountNumber);
-                return false;
             } catch (SQLException e) {
                 log.error("Error deleting account {}: {}", accountNumber, e.getMessage());
                 throw new RuntimeException("Failed to delete account", e);

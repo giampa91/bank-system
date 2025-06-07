@@ -1,6 +1,7 @@
 package com.bank.system.account_service.kafka;
 
 import com.bank.system.account_service.service.AccountService;
+import com.bank.system.account_service.service.PaymentAccountService;
 import com.bank.system.dtos.dto.CompensatePaymentRequestEvent;
 import com.bank.system.dtos.dto.PaymentInitiatedEvent;
 import com.bank.system.dtos.dto.ReceiverCreditRequestEvent;
@@ -20,30 +21,30 @@ public class AccountConsumer {
     private static final String RECEIVER_CREDITED_REQUESTED_TOPIC = "receiver-credited-requested-topic";
     private static final String COMPENSATE_PAYMENT_REQEUST_TOPIC = "compensate-payment-request-topic";
 
-    private final AccountService accountService;
+    private final PaymentAccountService paymentAccountService;
 
     @Autowired
-    public AccountConsumer(AccountService accountService){
-        this.accountService = accountService;
+    public AccountConsumer(PaymentAccountService paymentAccountService){
+        this.paymentAccountService = paymentAccountService;
     }
 
 
     @KafkaListener(topics = PAYMENT_INITIATED_TOPIC, groupId = "${" + AccountConsumer.SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenPaymentInitiatedEvent(PaymentInitiatedEvent event) {
         log.info("Consumed PaymentInitiatedEvent for paymentId: {}", event.getPaymentId());
-        accountService.handlePaymentInitiatedEvent(event);
+        paymentAccountService.handlePaymentInitiatedEvent(event);
     }
 
     @KafkaListener(topics = RECEIVER_CREDITED_REQUESTED_TOPIC, groupId = "${" + AccountConsumer.SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenReceiverCreditedRequestedEvent(ReceiverCreditRequestEvent event) {
         log.info("Consumed ReceiverCreditRequestEvent for paymentId: {}", event.getPaymentId());
-        accountService.handleReceiverCreditRequestEvent(event);
+        paymentAccountService.handleReceiverCreditRequestEvent(event);
     }
 
     @KafkaListener(topics = COMPENSATE_PAYMENT_REQEUST_TOPIC, groupId = "${" + AccountConsumer.SPRING_KAFKA_CONSUMER_GROUP_ID + "}")
     public void listenCompensatePaymentRequestEvent(CompensatePaymentRequestEvent event) {
         log.info("Consumed CompensatePaymentEvent for paymentId: {}", event.getPaymentId());
-        accountService.handleCompensatePaymentRequestEvent(event);
+        paymentAccountService.handleCompensatePaymentRequestEvent(event);
     }
 
 }

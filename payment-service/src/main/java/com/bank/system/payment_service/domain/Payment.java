@@ -72,7 +72,6 @@ public class Payment {
     public Payment() {
     }
 
-    // Constructor for creating new payments (excluding generated fields and timestamps)
     public Payment(String tenantId, String paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey) {
         this.tenantId = tenantId;
         this.paymentId = paymentId;

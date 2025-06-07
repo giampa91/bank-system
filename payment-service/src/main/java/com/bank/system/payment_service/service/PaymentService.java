@@ -53,7 +53,7 @@ public class PaymentService {
 
     private static Payment mapPaymentRequestDtoToPayment(PaymentRequestDTO requestDTO) {
         Payment payment = new Payment();
-        payment.setPaymentId(requestDTO.getIdempotencyKey()); // Use idempotency key as paymentId for simplicity
+        payment.setPaymentId(requestDTO.getIdempotencyKey());
         payment.setSenderAccountId(requestDTO.getSenderAccountId());
         payment.setReceiverAccountId(requestDTO.getReceiverAccountId());
         payment.setAmount(requestDTO.getAmount());
@@ -152,7 +152,7 @@ public class PaymentService {
                     if (updatedPaymentOpt.isPresent()) {
                         Payment payment = updatedPaymentOpt.get();
                         log.info("Payment {} status updated to CREDIT_FAILED. Publishing PaymentCompletedEvent.", event.getPaymentId());
-                        return sendPaymentCompletedEvent(payment);
+                        return sendCompensatePaymentEventForCreditFailed(payment);
                     } else {
                         log.error("Failed to update payment status to CREDIT_FAILED for paymentId: {}. Payment not found.", event.getPaymentId());
                         return CompletableFuture.completedFuture(null);
