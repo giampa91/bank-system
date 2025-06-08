@@ -6,10 +6,8 @@ import com.bank.system.account_service.repository.AccountRepository;
 import com.bank.system.dtos.dto.PaymentInitiatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -39,17 +37,6 @@ public class AccountService {
                     log.error("Failed to create account for user ID {}: {}", account.getUserId(), ex.getMessage());
                     throw new RuntimeException("Account creation failed", ex);
                 });
-    }
-
-    public CompletableFuture<Boolean> transfer(AccountController.TransferRequest request){
-        PaymentInitiatedEvent paymentInitiatedEvent = new PaymentInitiatedEvent();
-        paymentInitiatedEvent.setPaymentId(String.valueOf(UUID.randomUUID()));
-        paymentInitiatedEvent.setAmount(request.getAmount());
-        paymentInitiatedEvent.setCurrency("Eur");
-        paymentInitiatedEvent.setSenderAccountId(request.getFromAccountNumber());
-        paymentInitiatedEvent.setReceiverAccountId(request.getToAccountNumber());
-        paymentInitiatedEvent.setIdempotencyKey(request.getIdempotencyKey());
-        return paymentAccountService.handlePaymentInitiatedEvent(paymentInitiatedEvent);
     }
 
     public CompletableFuture<Optional<Account>> getAccountById(Long id) {

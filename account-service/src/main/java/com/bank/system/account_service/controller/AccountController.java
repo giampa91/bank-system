@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -204,49 +203,6 @@ public class AccountController {
     }
 
     /**
-     * Transfers a specified amount from one account to another.
-     * HTTP Method: POST
-     * Endpoint: /api/accounts/transfer
-     * Request Body: TransferRequest object (JSON)
-     * Response: Boolean (true for success) with HTTP status 200 (OK),
-     * 400 (Bad Request) for invalid amount/insufficient funds/same accounts,
-     * 404 (Not Found) if source/destination account doesn't exist,
-     * 500 (Internal Server Error) for other issues.
-     *
-     * @param request The TransferRequest containing fromAccountNumber, toAccountNumber, and amount.
-     * @return A CompletableFuture containing ResponseEntity with a boolean indicating success and HTTP status.
-     */
-    @PostMapping("/transfer")
-    public CompletableFuture<ResponseEntity<Boolean>> transfer(@RequestBody TransferRequest request) {
-        log.info("Received request to transfer {} from account {} to {}",
-                request.getAmount(), request.getFromAccountNumber(), request.getToAccountNumber());
-        return accountService.transfer(request)
-                .thenApply(success -> {
-                    if (success) {
-                        log.info("Transfer successful from {} to {}", request.getFromAccountNumber(), request.getToAccountNumber());
-                        return new ResponseEntity<>(true, HttpStatus.OK);
-                    } else {
-                        // This else block might be hit if the service returns false for other reasons not caught by exception.
-                        log.warn("Transfer failed for unknown reasons from {} to {}", request.getFromAccountNumber(), request.getToAccountNumber());
-                        return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                })
-                .exceptionally(ex -> {
-                    log.error("Error during transfer from {} to {}: {}", request.getFromAccountNumber(), request.getToAccountNumber(), ex.getMessage());
-                    if (ex.getCause() instanceof IllegalArgumentException) {
-                        return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
-                    } else if (ex.getCause() instanceof RuntimeException) {
-                        if (ex.getCause().getMessage().contains("Insufficient funds")) {
-                            return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
-                        } else if (ex.getCause().getMessage().contains("Account not found")) {
-                            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
-                        }
-                    }
-                    return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
-                });
-    }
-
-    /**
      * Deletes an account by its account number.
      * HTTP Method: DELETE
      * Endpoint: /api/accounts/{accountNumber}
@@ -312,18 +268,9 @@ public class AccountController {
      * Request DTO for transfer operations.
      */
     public static class TransferRequest {
-        private String fromAccountNumber;
         private String toAccountNumber;
         private String idempotencyKey;
         private BigDecimal amount;
-
-        public String getFromAccountNumber() {
-            return fromAccountNumber;
-        }
-
-        public void setFromAccountNumber(String fromAccountNumber) {
-            this.fromAccountNumber = fromAccountNumber;
-        }
 
         public String getToAccountNumber() {
             return toAccountNumber;

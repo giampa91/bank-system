@@ -20,8 +20,7 @@ import java.util.Objects;
 
 @Entity // Marks this class as a JPA entity
 @Table(name = "account", uniqueConstraints = {
-        // accountNumber must be unique per tenant
-        @UniqueConstraint(columnNames = {"tenant_id", "account_number"})
+        @UniqueConstraint(columnNames = {"account_number"})
 })
 @EntityListeners(AuditingEntityListener.class) // Enables automatic @CreatedDate and @LastModifiedDate
 public class Account {
@@ -30,9 +29,6 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // For auto-incrementing Long IDs
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
-
-    @Column(name = "tenant_id", nullable = false, length = 255) // Crucial for multi-tenancy
-    private String tenantId;
 
     @Column(name = "account_number", nullable = false, unique = false, length = 255) // Unique constraint is composite
     private String accountNumber;
@@ -56,8 +52,7 @@ public class Account {
     }
 
     // Constructor for creating new accounts (excluding generated ID and auditing timestamps)
-    public Account(String tenantId, String accountNumber, Long userId, BigDecimal balance) {
-        this.tenantId = tenantId;
+    public Account(String accountNumber, Long userId, BigDecimal balance) {
         this.accountNumber = accountNumber;
         this.userId = userId;
         this.balance = balance;
@@ -65,9 +60,8 @@ public class Account {
     }
 
     // Full constructor (useful for mapping from DB or tests)
-    public Account(Long id, String tenantId, String accountNumber, Long userId, BigDecimal balance, Instant createdAt, Instant updatedAt) {
+    public Account(Long id, String accountNumber, Long userId, BigDecimal balance, Instant createdAt, Instant updatedAt) {
         this.id = id;
-        this.tenantId = tenantId;
         this.accountNumber = accountNumber;
         this.userId = userId;
         this.balance = balance;
@@ -78,10 +72,6 @@ public class Account {
     // Getters
     public Long getId() {
         return id;
-    }
-
-    public String getTenantId() {
-        return tenantId;
     }
 
     public String getAccountNumber() {
@@ -107,10 +97,6 @@ public class Account {
     // Setters (for JPA to populate the object and for updates)
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
     }
 
     public void setAccountNumber(String accountNumber) {
@@ -140,7 +126,6 @@ public class Account {
         Account account = (Account) o;
         // For JPA entities, equals and hashCode should primarily rely on the ID
         // once the entity is persisted. Before persistence, if ID is null,
-        // you might use a business key (like tenantId + accountNumber).
         // For simplicity and common JPA practice, we'll rely on the ID here.
         return id != null && Objects.equals(id, account.id);
     }
@@ -154,7 +139,6 @@ public class Account {
     public String toString() {
         return "Account{" +
                 "id=" + id +
-                ", tenantId='" + tenantId + '\'' +
                 ", accountNumber='" + accountNumber + '\'' +
                 ", userId=" + userId +
                 ", balance=" + balance +
