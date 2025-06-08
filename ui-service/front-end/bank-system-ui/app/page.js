@@ -2,184 +2,179 @@
 
 import React, { useState } from 'react';
 
-// Mock data for users and their accounts
-const mockUsers = [
-  {
-    id: 'user123',
-    name: 'Alice Johnson',
-    balance: 5432.10,
-    transactions: [
-      { id: 't1', date: '2025-06-01', description: 'Grocery Store', amount: -75.50, type: 'debit' },
-      { id: 't2', date: '2025-05-28', description: 'Salary Deposit', amount: 2500.00, type: 'credit' },
-      { id: 't3', date: '2025-05-25', description: 'Online Subscription', amount: -12.99, type: 'debit' },
-      { id: 't4', date: '2025-05-20', description: 'Electricity Bill', amount: -120.00, type: 'debit' },
-    ],
-  },
-  {
-    id: 'user456',
-    name: 'Bob Smith',
-    balance: 1234.56,
-    transactions: [
-      { id: 't5', date: '2025-06-02', description: 'Restaurant', amount: -45.00, type: 'debit' },
-      { id: 't6', date: '2025-05-30', description: 'Freelance Payment', amount: 800.00, type: 'credit' },
-      { id: 't7', date: '2025-05-26', description: 'Cinema Tickets', amount: -30.00, type: 'debit' },
-    ],
-  },
-];
+// --- API Base URL ---
+// In a real application, this would be an environment variable.
+const API_BASE_URL = 'http://localhost:8080';
 
-// --- Mock API Functions (simulating Axios calls) ---
-// In a real Next.js app, these would typically be actual API calls to a backend
-// or Next.js API Routes (e.g., using axios.get('/api/user', { params: { userId } }))
+const API_BASE_URL_PAYMENT = 'http://localhost:8081';
 
-// Simulate fetching user info
-const mockFetchUserInfo = (userId) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const user = mockUsers.find(u => u.id === userId);
-      if (user) {
-        resolve({ data: { id: user.id, name: user.name } }); // Only return basic info
-      } else {
-        reject(new Error('User not found'));
-      }
-    }, 1000); // Simulate network delay
-  });
+// --- API Functions (using fetch to simulate Axios) ---
+// These functions now make actual network requests to your backend.
+
+/**
+ * Fetches account details (user info, balance, transactions) for a given account number.
+ * @param {string} accountNumber The account number to fetch details for.
+ * @returns {Promise<Object>} A promise that resolves with the account data.
+ */
+const fetchAccountDetails = async (accountNumber) => {
+  const response = await fetch(`${API_BASE_URL}/api/accounts/by-account-number/${accountNumber}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+    throw new Error(errorData.message || `API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  // Assuming the API response structure directly provides accountNumber, accountHolderName, balance, and transactions.
+  // We map accountNumber to id and accountHolderName to name for consistency with existing state.
+  return {
+    data: {
+      id: data.accountNumber, // Mapping API's accountNumber to current 'id' state
+      name: data.accountHolderName, // Mapping API's accountHolderName to current 'name' state
+      balance: data.balance,
+      transactions: data.transactions || [], // Ensure transactions is an array
+    }
+  };
 };
 
-// Simulate fetching dashboard data (balance and transactions)
-const mockFetchDashboardData = (userId) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const user = mockUsers.find(u => u.id === userId);
-      if (user) {
-        resolve({ data: { balance: user.balance, transactions: user.transactions } });
-      } else {
-        reject(new Error('Dashboard data not found'));
-      }
-    }, 1200); // Simulate network delay
+/**
+ * Sends a payment request to the backend.
+ * @param {string} senderAccountId The ID of the sender's account.
+ * @param {string} receiverAccountId The ID of the receiver's account.
+ * @param {number} amount The amount to send.
+ * @param {string} currency The currency of the payment (e.g., "Eur").
+ * @param {string} idempotencyKey A unique key to prevent duplicate payments.
+ * @returns {Promise<Object>} A promise that resolves with the payment confirmation.
+ */
+const sendPayment = async (senderAccountId, receiverAccountId, amount, currency, idempotencyKey) => {
+  const response = await fetch(`${API_BASE_URL_PAYMENT}/api/payments/initiate`, { // Assuming /api/transactions is the payment endpoint
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      senderAccountId,
+      receiverAccountId,
+      amount,
+      currency,
+      idempotencyKey,
+    }),
   });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+    throw new Error(errorData.message || `Payment failed: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return { data: { message: data.message || 'Payment successful!' } };
 };
 
-// Simulate making a payment
-const mockMakePayment = (payerId, recipientId, amount) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const payer = mockUsers.find(u => u.id === payerId);
-      const recipient = mockUsers.find(u => u.id === recipientId);
-
-      if (!payer) {
-        reject(new Error('Payer not found.'));
-        return;
-      }
-      if (!recipient) {
-        reject(new Error('Recipient not found.'));
-        return;
-      }
-      if (payer.balance < amount) {
-        reject(new Error('Insufficient funds.'));
-        return;
-      }
-      if (amount <= 0) {
-        reject(new Error('Amount must be positive.'));
-        return;
-      }
-
-      // Simulate balance update (in a real app, this would be backend logic)
-      payer.balance -= amount;
-      recipient.balance += amount;
-
-      // Add dummy transaction for payer
-      payer.transactions.unshift({
-        id: `t${Date.now()}`,
-        date: new Date().toISOString().split('T')[0],
-        description: `Payment to ${recipient.name}`,
-        amount: -amount,
-        type: 'debit',
-      });
-
-      resolve({ data: { message: 'Payment successful!' } });
-    }, 1500); // Simulate network delay
-  });
-};
-
-// Home component for app/page.js
+// Main Home component for app/page.js
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'dashboard', 'payment'
-  const [currentUser, setCurrentUser] = useState(null); // Stores { id, name, balance, transactions }
-  const [userIdInput, setUserIdInput] = useState('');
+  // State to manage the current view/page ('login', 'dashboard', 'payment')
+  const [currentPage, setCurrentPage] = useState('login');
+  // State to store authenticated user data
+  const [currentUser, setCurrentUser] = useState(null);
+  // State for login input field (now refers to accountNumber)
+  const [accountNumberInput, setAccountNumberInput] = useState('');
+  // State for loading indicator
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(''); // General message for success/error
+  // State for displaying messages (success/error)
+  const [message, setMessage] = useState('');
+
+  // States for payment form inputs
+  const [paymentRecipientId, setPaymentRecipientId] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
 
   // --- Login Page Logic ---
   const handleLogin = async () => {
-    setLoading(true);
-    setMessage('');
+    setLoading(true); // Show loading indicator
+    setMessage(''); // Clear previous messages
     try {
-      // Simulate API call to get user info
-      const response = await mockFetchUserInfo(userIdInput);
-      const userInfo = response.data; // { id, name }
+      // Fetch account details (user info, balance, transactions) from the backend
+      const response = await fetchAccountDetails(accountNumberInput);
+      const accountInfo = response.data;
 
-      // Simulate fetching dashboard data after successful login
-      const dashboardResponse = await mockFetchDashboardData(userInfo.id);
+      // Set current user with all their details from the API response
       setCurrentUser({
-        ...userInfo,
-        balance: dashboardResponse.data.balance,
-        transactions: dashboardResponse.data.transactions,
+        id: accountInfo.id,
+        name: accountInfo.name,
+        balance: accountInfo.balance,
+        transactions: accountInfo.transactions,
       });
-      setCurrentPage('dashboard'); // Navigate to dashboard
+      setCurrentPage('dashboard'); // Navigate to the dashboard
     } catch (error) {
-      setMessage(`Login failed: ${error.message}. Try 'user123' or 'user456'.`);
+      // Handle login errors
+      setMessage(`Login failed: ${error.message}.`); // No longer suggest mock IDs
       setCurrentUser(null);
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide loading indicator
     }
   };
 
   // --- Payment Page Logic ---
-  const [paymentRecipientId, setPaymentRecipientId] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('');
-
   const handleMakePayment = async () => {
-    setLoading(true);
-    setMessage('');
+    setLoading(true); // Show loading indicator
+    setMessage(''); // Clear previous messages
     try {
       const amount = parseFloat(paymentAmount);
+      // Validate payment amount
       if (isNaN(amount) || amount <= 0) {
         setMessage('Please enter a valid positive amount.');
         setLoading(false);
         return;
       }
+      if (!currentUser || !currentUser.id) {
+          setMessage('Error: Sender account not found.');
+          setLoading(false);
+          return;
+      }
 
-      // Simulate API call to make payment
-      const response = await mockMakePayment(currentUser.id, paymentRecipientId, amount);
-      setMessage(response.data.message);
+      // Generate a random idempotency key for the payment
+      const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Refresh dashboard data after successful payment
-      const dashboardResponse = await mockFetchDashboardData(currentUser.id);
+      // Send payment request to the backend
+      const response = await sendPayment(
+        currentUser.id, // Sender Account ID
+        paymentRecipientId, // Receiver Account ID from input
+        amount,
+        'Eur', // Hardcoded currency as per curl example
+        idempotencyKey
+      );
+      setMessage(response.data.message); // Display success message
+
+      // Refresh dashboard data to reflect the new balance and transactions
+      // This is crucial as payment changes the sender's balance and adds a transaction
+      const dashboardResponse = await fetchAccountDetails(currentUser.id);
       setCurrentUser(prevUser => ({
         ...prevUser,
         balance: dashboardResponse.data.balance,
         transactions: dashboardResponse.data.transactions,
       }));
+      // Clear payment form fields
       setPaymentRecipientId('');
       setPaymentAmount('');
     } catch (error) {
+      // Handle payment errors
       setMessage(`Payment failed: ${error.message}`);
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide loading indicator
     }
   };
 
+  // --- Logout Logic ---
   const handleLogout = () => {
-    setCurrentUser(null);
-    setUserIdInput('');
-    setMessage('');
-    setCurrentPage('login');
+    setCurrentUser(null); // Clear current user
+    setAccountNumberInput(''); // Clear login input
+    setMessage(''); // Clear messages
+    setCurrentPage('login'); // Go back to login page
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center p-4 font-inter">
       <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg sm:max-w-xl text-center">
-        {/* Loading Indicator */}
+        {/* Loading Indicator Overlay */}
         {loading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-xl z-10">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
@@ -187,52 +182,55 @@ export default function Home() {
           </div>
         )}
 
-        {/* Message Display */}
+        {/* Global Message Display (for success/error) */}
         {message && (
           <div className={`mb-4 p-3 rounded-lg text-white ${message.includes('failed') || message.includes('error') ? 'bg-red-500' : 'bg-green-500'}`}>
             {message}
           </div>
         )}
 
-        {/* --- Login Page --- */}
+        {/* --- Login Page UI --- */}
         {currentPage === 'login' && (
           <>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-800 mb-6">
               Welcome to Your Bank
             </h1>
-            <p className="text-gray-600 mb-6">Enter a user ID to login. Try `user123` or `user456`.</p>
+            <p className="text-gray-600 mb-6">Enter your Account Number to login.</p>
             <input
               type="text"
               className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all duration-200"
-              placeholder="Enter User ID (e.g., user123)"
-              value={userIdInput}
-              onChange={(e) => setUserIdInput(e.target.value)}
-              disabled={loading}
+              placeholder="Enter Account Number (e.g., ACC-001-A)"
+              value={accountNumberInput}
+              onChange={(e) => setAccountNumberInput(e.target.value)}
+              disabled={loading} // Disable input while loading
             />
             <button
               onClick={handleLogin}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 disabled:opacity-50"
-              disabled={loading || !userIdInput}
+              disabled={loading || !accountNumberInput} // Disable button if loading or input is empty
             >
               {loading ? 'Logging In...' : 'Login'}
             </button>
           </>
         )}
 
-        {/* --- Dashboard Page --- */}
+        {/* --- Dashboard Page UI --- */}
         {currentPage === 'dashboard' && currentUser && (
           <>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-800 mb-6">
               Welcome, {currentUser.name}!
             </h1>
             <div className="mb-8 text-left">
+              <p className="text-xl font-semibold text-gray-700 mb-2">Account Number:</p>
+              <p className="text-2xl font-bold text-gray-800 mb-4">{currentUser.id}</p> {/* Display account number */}
+
               <p className="text-xl font-semibold text-gray-700 mb-2">Account Balance:</p>
               <p className="text-5xl font-bold text-green-600 mb-6">
                 ${currentUser.balance.toFixed(2)}
               </p>
 
               <h2 className="text-2xl font-semibold text-indigo-700 mb-4">Recent Transactions</h2>
-              {currentUser.transactions.length > 0 ? (
+              {currentUser.transactions && currentUser.transactions.length > 0 ? (
                 <ul className="divide-y divide-gray-200 bg-gray-50 p-4 rounded-lg">
                   {currentUser.transactions.map((transaction) => (
                     <li key={transaction.id} className="py-3 flex justify-between items-center">
@@ -268,7 +266,7 @@ export default function Home() {
           </>
         )}
 
-        {/* --- Payment Page --- */}
+        {/* --- Payment Page UI --- */}
         {currentPage === 'payment' && currentUser && (
           <>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-800 mb-6">
@@ -278,13 +276,13 @@ export default function Home() {
 
             <div className="text-left mb-6">
               <label htmlFor="recipientId" className="block text-gray-700 text-sm font-bold mb-2">
-                Recipient User ID:
+                Recipient Account ID:
               </label>
               <input
                 type="text"
                 id="recipientId"
                 className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all duration-200"
-                placeholder="e.g., user456"
+                placeholder="e.g., ACC-002-B"
                 value={paymentRecipientId}
                 onChange={(e) => setPaymentRecipientId(e.target.value)}
                 disabled={loading}

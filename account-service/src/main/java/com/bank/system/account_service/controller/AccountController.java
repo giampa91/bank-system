@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @RestController
 @RequestMapping("/api/accounts")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AccountController {
 
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
