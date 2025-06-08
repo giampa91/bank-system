@@ -1,12 +1,13 @@
 'use client'; // This directive makes this component a Client Component
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 
 // --- API Base URL ---
 // In a real application, this would be an environment variable.
-const API_BASE_URL = 'http://localhost:8080';
-
+const API_BASE_URL_ACCOUNT = 'http://localhost:8080';
 const API_BASE_URL_PAYMENT = 'http://localhost:8081';
+
+const LOCAL_STORAGE_KEY = 'bankAppUser'; // Key for localStorage
 
 // --- API Functions (using fetch to simulate Axios) ---
 // These functions now make actual network requests to your backend.
@@ -17,7 +18,7 @@ const API_BASE_URL_PAYMENT = 'http://localhost:8081';
  * @returns {Promise<Object>} A promise that resolves with the account data.
  */
 const fetchAccountDetails = async (accountNumber) => {
-  const response = await fetch(`${API_BASE_URL}/api/accounts/by-account-number/${accountNumber}`);
+  const response = await fetch(`${API_BASE_URL_ACCOUNT}/api/accounts/by-account-number/${accountNumber}`);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
@@ -87,6 +88,21 @@ export default function Home() {
   const [paymentRecipientId, setPaymentRecipientId] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
 
+  // --- useEffect to load user from localStorage on initial render ---
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        setCurrentPage('dashboard'); // Go directly to dashboard if user is logged in
+      }
+    } catch (error) {
+      console.error("Failed to parse user from localStorage:", error);
+      localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear potentially corrupted data
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
   // --- Login Page Logic ---
   const handleLogin = async () => {
     setLoading(true); // Show loading indicator
@@ -97,17 +113,20 @@ export default function Home() {
       const accountInfo = response.data;
 
       // Set current user with all their details from the API response
-      setCurrentUser({
+      const userToStore = {
         id: accountInfo.id,
         name: accountInfo.name,
         balance: accountInfo.balance,
         transactions: accountInfo.transactions,
-      });
+      };
+      setCurrentUser(userToStore);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userToStore)); // Store in localStorage
       setCurrentPage('dashboard'); // Navigate to the dashboard
     } catch (error) {
       // Handle login errors
       setMessage(`Login failed: ${error.message}.`); // No longer suggest mock IDs
       setCurrentUser(null);
+      localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear any partial/failed login data
     } finally {
       setLoading(false); // Hide loading indicator
     }
@@ -147,11 +166,14 @@ export default function Home() {
       // Refresh dashboard data to reflect the new balance and transactions
       // This is crucial as payment changes the sender's balance and adds a transaction
       const dashboardResponse = await fetchAccountDetails(currentUser.id);
-      setCurrentUser(prevUser => ({
-        ...prevUser,
+      const updatedUser = {
+        ...currentUser, // Keep original user info (name, id)
         balance: dashboardResponse.data.balance,
         transactions: dashboardResponse.data.transactions,
-      }));
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedUser)); // Update localStorage
+
       // Clear payment form fields
       setPaymentRecipientId('');
       setPaymentAmount('');
@@ -165,9 +187,10 @@ export default function Home() {
 
   // --- Logout Logic ---
   const handleLogout = () => {
-    setCurrentUser(null); // Clear current user
+    setCurrentUser(null); // Clear current user state
     setAccountNumberInput(''); // Clear login input
     setMessage(''); // Clear messages
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // Remove user data from localStorage
     setCurrentPage('login'); // Go back to login page
   };
 

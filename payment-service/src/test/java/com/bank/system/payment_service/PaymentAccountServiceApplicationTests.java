@@ -1,22 +1,19 @@
 package com.bank.system.payment_service;
 
-import com.bank.system.dtos.dto.PaymentInitiatedEvent;
 import com.bank.system.payment_service.kafka.PaymentProducer;
-import com.bank.system.payment_service.service.PaymentService;
+import com.bank.system.payment_service.service.PaymentAccountService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.math.BigDecimal;
-
 @SpringBootTest
-class PaymentServiceApplicationTests {
+class PaymentAccountServiceApplicationTests {
 
 	@Autowired
 	private PaymentProducer producer;
 
 	@Autowired
-	private PaymentService paymentService;
+	private PaymentAccountService paymentAccountService;
 
 	@Test
 	void contextLoads() {

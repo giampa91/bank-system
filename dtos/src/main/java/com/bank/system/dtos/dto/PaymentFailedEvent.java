@@ -2,26 +2,27 @@ package com.bank.system.dtos.dto;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public class PaymentFailedEvent {
-    private String paymentId;
+    private UUID paymentId;
     private String reason;
     private Instant timestamp;
 
     public PaymentFailedEvent() {
     }
 
-    public PaymentFailedEvent(String paymentId, String reason, Instant timestamp) {
+    public PaymentFailedEvent(UUID paymentId, String reason, Instant timestamp) {
         this.paymentId = paymentId;
         this.reason = reason;
         this.timestamp = timestamp;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 
-    public void setPaymentId(String paymentId) {
+    public void setPaymentId(UUID paymentId) {
         this.paymentId = paymentId;
     }
 

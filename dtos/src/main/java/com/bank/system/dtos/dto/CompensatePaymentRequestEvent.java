@@ -3,9 +3,10 @@ package com.bank.system.dtos.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public class CompensatePaymentRequestEvent {
-    private String paymentId;
+    private UUID paymentId;
     private String accountId;
     private BigDecimal amount;
     private String reason;
@@ -14,18 +15,18 @@ public class CompensatePaymentRequestEvent {
     public CompensatePaymentRequestEvent() {
     }
 
-    public CompensatePaymentRequestEvent(String paymentId, String accountId, String reason, Instant timestamp) {
+    public CompensatePaymentRequestEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
         this.reason = reason;
         this.timestamp = timestamp;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 
-    public void setPaymentId(String paymentId) {
+    public void setPaymentId(UUID paymentId) {
         this.paymentId = paymentId;
     }
 

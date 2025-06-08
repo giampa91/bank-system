@@ -33,8 +33,8 @@ public class PaymentRepository {
      */
     public CompletableFuture<Payment> save(Payment payment) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "INSERT INTO payment (id, payment_id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO payment (id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -43,24 +43,23 @@ public class PaymentRepository {
                 payment.setUpdatedAt(Instant.now());
 
                 stmt.setObject(1, payment.getId());
-                stmt.setString(2, payment.getPaymentId());
-                stmt.setString(3, payment.getSenderAccountId());
-                stmt.setString(4, payment.getReceiverAccountId());
-                stmt.setBigDecimal(5, payment.getAmount());
-                stmt.setString(6, payment.getCurrency());
-                stmt.setString(7, payment.getStatus().name());
-                stmt.setString(8, payment.getIdempotencyKey());
-                stmt.setTimestamp(9, Timestamp.from(payment.getCreatedAt()));
-                stmt.setTimestamp(10, Timestamp.from(payment.getUpdatedAt()));
+                stmt.setString(2, payment.getSenderAccountId());
+                stmt.setString(3, payment.getReceiverAccountId());
+                stmt.setBigDecimal(4, payment.getAmount());
+                stmt.setString(5, payment.getCurrency());
+                stmt.setString(6, payment.getStatus().name());
+                stmt.setString(7, payment.getIdempotencyKey());
+                stmt.setTimestamp(8, Timestamp.from(payment.getCreatedAt()));
+                stmt.setTimestamp(9, Timestamp.from(payment.getUpdatedAt()));
 
                 int affectedRows = stmt.executeUpdate();
                 if (affectedRows == 0) {
                     throw new SQLException("Creating payment failed, no rows affected.");
                 }
-                log.info("Payment saved: {}", payment.getPaymentId());
+                log.info("Payment saved: {}", payment.getId());
                 return payment;
             } catch (SQLException e) {
-                log.error("Error saving payment {}: {}", payment.getPaymentId(), e.getMessage());
+                log.error("Error saving payment {}: {}", payment.getId(), e.getMessage());
                 throw new RuntimeException("Failed to save payment", e);
             }
         }, virtualThreadExecutor);
@@ -69,16 +68,17 @@ public class PaymentRepository {
     /**
      * Finds a payment by its business-friendly payment ID.
      *
-     * @param paymentId The business payment ID.
+     
+     * @param id The business payment ID.
      * @return A CompletableFuture that completes with an Optional containing the Payment if found.
      */
-    public CompletableFuture<Optional<Payment>> findByPaymentId(String paymentId) {
+    public CompletableFuture<Optional<Payment>> findById(UUID id) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "SELECT id, payment_id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at " +
-                    "FROM payment WHERE payment_id = ?";
+            String sql = "SELECT id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at " +
+                    "FROM payment WHERE id = ?";
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, paymentId);
+                stmt.setObject(1, id);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         return Optional.of(mapResultSetToPayment(rs));
@@ -86,7 +86,27 @@ public class PaymentRepository {
                     return Optional.empty();
                 }
             } catch (SQLException e) {
-                log.error("Error finding payment by ID {}: {}", paymentId, e.getMessage());
+                log.error("Error finding payment by ID {}: {}", id, e.getMessage());
+                throw new RuntimeException("Failed to find payment by ID", e);
+            }
+        }, virtualThreadExecutor);
+    }
+
+    public CompletableFuture<Optional<Payment>> findByIdempotencyKeyId(String idempotencyKey) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at " +
+                    "FROM payment WHERE idempotency_key = ?";
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setObject(1, idempotencyKey);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapResultSetToPayment(rs));
+                    }
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                log.error("Error finding payment idempotency key {}: {}", idempotencyKey, e.getMessage());
                 throw new RuntimeException("Failed to find payment by ID", e);
             }
         }, virtualThreadExecutor);
@@ -95,28 +115,28 @@ public class PaymentRepository {
     /**
      * Updates the status of an existing payment.
      *
-     * @param paymentId The business payment ID.
+     * @param id The business payment ID.
      * @param newStatus The new status to set.
      * @return A CompletableFuture that completes with the updated Payment object, or empty if not found.
      */
-    public CompletableFuture<Optional<Payment>> updateStatus(String paymentId, PaymentStatus newStatus) {
+    public CompletableFuture<Optional<Payment>> updateStatus(UUID id, PaymentStatus newStatus) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "UPDATE payment SET status = ?, updated_at = ? WHERE payment_id = ?";
+            String sql = "UPDATE payment SET status = ?, updated_at = ? WHERE id = ?";
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, newStatus.name());
                 stmt.setTimestamp(2, Timestamp.from(Instant.now()));
-                stmt.setString(3, paymentId);
+                stmt.setObject(3, id);
 
                 int affectedRows = stmt.executeUpdate();
                 if (affectedRows > 0) {
-                    log.info("Payment {} status updated to {}", paymentId, newStatus);
-                    return findByPaymentId(paymentId).join(); // Fetch and return the updated payment
+                    log.info("Payment {} status updated to {}", id, newStatus);
+                    return findById(id).join();
                 }
-                log.warn("Payment {} not found for status update.", paymentId);
+                log.warn("Payment {} not found for status update.", id);
                 return Optional.empty();
             } catch (SQLException e) {
-                log.error("Error updating payment {} status to {}: {}", paymentId, newStatus, e.getMessage());
+                log.error("Error updating payment {} status to {}: {}", id, newStatus, e.getMessage());
                 throw new RuntimeException("Failed to update payment status", e);
             }
         }, virtualThreadExecutor);
@@ -125,7 +145,6 @@ public class PaymentRepository {
     private Payment mapResultSetToPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setId(rs.getObject("id", UUID.class));
-        payment.setPaymentId(rs.getString("payment_id"));
         payment.setSenderAccountId(rs.getString("sender_account_id"));
         payment.setReceiverAccountId(rs.getString("receiver_account_id"));
         payment.setAmount(rs.getBigDecimal("amount"));

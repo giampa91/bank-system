@@ -22,10 +22,7 @@ import jakarta.persistence.EntityListeners; // To enable auditing listeners
 
 @Entity // Marks this class as a JPA entity
 @Table(name = "payment", uniqueConstraints = {
-        // paymentId must be unique per tenant
-        @UniqueConstraint(columnNames = {"tenant_id", "payment_id"}),
-        // Idempotency key must be unique per tenant (prevents duplicate payments)
-        @UniqueConstraint(columnNames = {"tenant_id", "idempotency_key"})
+        @UniqueConstraint(columnNames = {"idempotency_key"})
 })
 @EntityListeners(AuditingEntityListener.class) // Enables automatic @CreatedDate and @LastModifiedDate
 public class Payment {
@@ -34,12 +31,6 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID) // For UUID generation (Hibernate 6+ handles this)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false) // Crucial for multi-tenancy
-    private String tenantId;
-
-    @Column(name = "payment_id", nullable = false, length = 36) // Business-friendly ID, often a UUID string
-    private String paymentId;
 
     @Column(name = "sender_account_id", nullable = false, length = 255)
     private String senderAccountId;
@@ -73,8 +64,6 @@ public class Payment {
     }
 
     public Payment(String tenantId, String paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey) {
-        this.tenantId = tenantId;
-        this.paymentId = paymentId;
         this.senderAccountId = senderAccountId;
         this.receiverAccountId = receiverAccountId;
         this.amount = amount;
@@ -84,10 +73,8 @@ public class Payment {
     }
 
     // Full constructor (useful for mapping from DB or tests)
-    public Payment(UUID id, String tenantId, String paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, PaymentStatus status, String idempotencyKey, Instant createdAt, Instant updatedAt) {
+    public Payment(UUID id, String paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, PaymentStatus status, String idempotencyKey, Instant createdAt, Instant updatedAt) {
         this.id = id;
-        this.tenantId = tenantId;
-        this.paymentId = paymentId;
         this.senderAccountId = senderAccountId;
         this.receiverAccountId = receiverAccountId;
         this.amount = amount;
@@ -105,22 +92,6 @@ public class Payment {
 
     public void setId(UUID id) {
         this.id = id;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public String getPaymentId() {
-        return paymentId;
-    }
-
-    public void setPaymentId(String paymentId) {
-        this.paymentId = paymentId;
     }
 
     public String getSenderAccountId() {
@@ -208,8 +179,6 @@ public class Payment {
     public String toString() {
         return "Payment{" +
                 "id=" + id +
-                ", tenantId='" + tenantId + '\'' +
-                ", paymentId='" + paymentId + '\'' +
                 ", senderAccountId='" + senderAccountId + '\'' +
                 ", receiverAccountId='" + receiverAccountId + '\'' +
                 ", amount=" + amount +

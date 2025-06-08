@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -29,7 +30,7 @@ public class PaymentAccountService {
     public CompletableFuture<Boolean> handlePaymentInitiatedEvent(PaymentInitiatedEvent paymentInitiatedEvent) {
         String senderAccountId = paymentInitiatedEvent.getSenderAccountId();
         BigDecimal debitAmount = paymentInitiatedEvent.getAmount();
-        String paymentId = paymentInitiatedEvent.getPaymentId();
+        UUID paymentId = paymentInitiatedEvent.getPaymentId();
 
         log.info("Attempting to debit sender account {} for payment ID {}", senderAccountId, paymentId);
 
@@ -120,7 +121,7 @@ public class PaymentAccountService {
     public CompletableFuture<Void> handleReceiverCreditRequestEvent(ReceiverCreditRequestEvent receiverCreditRequestEvent) {
         String receiverAccountId = receiverCreditRequestEvent.getAccountId();
         BigDecimal creditAmount = receiverCreditRequestEvent.getCreditedAmount();
-        String paymentId = receiverCreditRequestEvent.getPaymentId();
+        UUID paymentId = receiverCreditRequestEvent.getPaymentId();
 
         log.info("Attempting to credit receiver account {} for payment ID {}", receiverAccountId, paymentId);
 
@@ -169,7 +170,7 @@ public class PaymentAccountService {
     public CompletableFuture<Void> handleCompensatePaymentRequestEvent(CompensatePaymentRequestEvent event) {
 
         String accountNumber = event.getAccountId();
-        String paymentId = event.getPaymentId();
+        UUID paymentId = event.getPaymentId();
         BigDecimal amount = event.getAmount();
 
         log.info("Attempting to compensate debit to account number {} for payment ID {}", accountNumber, paymentId);

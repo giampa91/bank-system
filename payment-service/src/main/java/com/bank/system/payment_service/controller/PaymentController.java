@@ -2,6 +2,7 @@ package com.bank.system.payment_service.controller;
 
 import com.bank.system.dtos.dto.*;
 import com.bank.system.payment_service.domain.Payment;
+import com.bank.system.payment_service.service.PaymentAccountService;
 import com.bank.system.payment_service.service.PaymentService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -32,18 +33,7 @@ public class PaymentController {
      */
     @PostMapping("/initiate")
     public CompletableFuture<ResponseEntity<Payment>> initiatePayment(@Valid @RequestBody PaymentRequestDTO requestDTO) {
-        log.info("Received payment initiation request for sender: {} to receiver: {} with amount: {}",
-                requestDTO.getSenderAccountId(), requestDTO.getReceiverAccountId(), requestDTO.getAmount());
-
-        return paymentService.initiatePayment(requestDTO)
-                .thenApply(payment -> {
-                    log.info("Payment initiated successfully with ID: {}", payment.getPaymentId());
-                    return ResponseEntity.status(HttpStatus.ACCEPTED).body(payment);
-                })
-                .exceptionally(ex -> {
-                    log.error("Error initiating payment: {}", ex.getMessage(), ex);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                });
+        return paymentService.initiatePayment(requestDTO);
     }
 
     // TODO: Add endpoints for getting payment status, history (if not handled by Transaction Service)

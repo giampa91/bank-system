@@ -3,9 +3,10 @@ package com.bank.system.dtos.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public class PaymentInitiatedEvent {
-    private String paymentId;
+    private UUID paymentId;
     private String senderAccountId;
     private String receiverAccountId;
     private BigDecimal amount;
@@ -16,7 +17,7 @@ public class PaymentInitiatedEvent {
     public PaymentInitiatedEvent() {
     }
 
-    public PaymentInitiatedEvent(String paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey, Instant timestamp) {
+    public PaymentInitiatedEvent(UUID paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey, Instant timestamp) {
         this.paymentId = paymentId;
         this.senderAccountId = senderAccountId;
         this.receiverAccountId = receiverAccountId;
@@ -26,11 +27,11 @@ public class PaymentInitiatedEvent {
         this.timestamp = timestamp;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 
-    public void setPaymentId(String paymentId) {
+    public void setPaymentId(UUID paymentId) {
         this.paymentId = paymentId;
     }
 

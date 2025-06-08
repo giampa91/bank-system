@@ -13,14 +13,4 @@ class AccountProducerTest {
     @Autowired
     AccountProducer accountProducer;
 
-    @Test
-    public void test(){
-        SenderDebitedEvent event = new SenderDebitedEvent();
-        event.setAccountId("accountId");
-        event.setCurrency("Eur");
-        event.setDebitedAmount(BigDecimal.ONE);
-        event.setPaymentId("paymentId");
-        accountProducer.sendSenderDebitedEvent(event);
-    }
-
 }

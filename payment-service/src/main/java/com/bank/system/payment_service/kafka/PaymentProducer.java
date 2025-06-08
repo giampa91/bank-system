@@ -32,7 +32,7 @@ public class PaymentProducer {
 
     public CompletableFuture<SendResult<String, Object>> sendPaymentInitiatedEvent(PaymentInitiatedEvent event) {
         log.info("Sending PaymentInitiatedEvent for paymentId: {}", event.getPaymentId());
-        return kafkaTemplate.send(PAYMENT_INITIATED_TOPIC, event.getPaymentId(), event)
+        return kafkaTemplate.send(PAYMENT_INITIATED_TOPIC, String.valueOf(event.getPaymentId()), event)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
                         log.info("PaymentInitiatedEvent sent successfully for paymentId: {} to topic {} with offset {}",
@@ -46,7 +46,7 @@ public class PaymentProducer {
 
     public CompletableFuture<SendResult<String, Object>> sendReceiverCreditRequestEvent(ReceiverCreditRequestEvent event) {
         log.info("Sending ReceiverCreditRequestEvent for paymentId: {}", event.getPaymentId());
-        return kafkaTemplate.send(RECEIVER_CREDITED_REQUESTED_TOPIC, event.getPaymentId(), event)
+        return kafkaTemplate.send(RECEIVER_CREDITED_REQUESTED_TOPIC, String.valueOf(event.getPaymentId()), event)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
                         log.info("ReceiverCreditRequestEvent sent successfully for paymentId: {} to topic {} with offset {}",
@@ -60,7 +60,7 @@ public class PaymentProducer {
 
     public CompletableFuture<SendResult<String, Object>> sendPaymentCompletedEvent(PaymentCompletedEvent event) {
         log.info("Sending PaymentCompletedEvent for paymentId: {}", event.getPaymentId());
-        return kafkaTemplate.send(PAYMENT_COMPLETED_TOPIC, event.getPaymentId(), event)
+        return kafkaTemplate.send(PAYMENT_COMPLETED_TOPIC, String.valueOf(event.getPaymentId()), event)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
                         log.info("PaymentCompletedEvent sent successfully for paymentId: {} to topic {} with offset {}",
@@ -74,7 +74,7 @@ public class PaymentProducer {
 
     public CompletableFuture<SendResult<String, Object>> sendCompensatePaymentEvent(CompensatePaymentEvent event) {
         log.info("Sending CompensatePaymentEvent for paymentId: {}", event.getPaymentId());
-        return kafkaTemplate.send(COMPENSATE_PAYMENT_TOPIC, event.getPaymentId(), event)
+        return kafkaTemplate.send(COMPENSATE_PAYMENT_TOPIC, String.valueOf(event.getPaymentId()), event)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
                         log.info("CompensatePaymentEvent sent successfully for paymentId: {} to topic {} with offset {}",

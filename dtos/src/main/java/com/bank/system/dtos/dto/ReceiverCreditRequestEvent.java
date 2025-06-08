@@ -3,9 +3,10 @@ package com.bank.system.dtos.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public class ReceiverCreditRequestEvent {
-    private String paymentId;
+    private UUID paymentId;
     private String accountId;
     private BigDecimal creditedAmount;
     private String currency;
@@ -14,7 +15,7 @@ public class ReceiverCreditRequestEvent {
     public ReceiverCreditRequestEvent() {
     }
 
-    public ReceiverCreditRequestEvent(String paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
+    public ReceiverCreditRequestEvent(UUID paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
         this.creditedAmount = creditedAmount;
@@ -22,11 +23,11 @@ public class ReceiverCreditRequestEvent {
         this.timestamp = timestamp;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 
-    public void setPaymentId(String paymentId) {
+    public void setPaymentId(UUID paymentId) {
         this.paymentId = paymentId;
     }
 
