@@ -22,6 +22,7 @@ CREATE TABLE outbox_event (
     type TEXT NOT NULL,
     payload TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
-    sent BOOLEAN DEFAULT FALSE
+    sent BOOLEAN DEFAULT FALSE,
+    version INTEGER DEFAULT 0
 );
 

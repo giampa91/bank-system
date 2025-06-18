@@ -18,11 +18,17 @@ public class OutboxEventRepository {
     }
 
     public void save(OutboxEvent event) {
+        event.setId(UUID.randomUUID());
+        event.setCreatedAt(Instant.now());
+        event.setVersion(0);
+
         jdbcTemplate.update("""
-            INSERT INTO outbox_event (id, aggregate_type, aggregate_id, type, payload, created_at, sent)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO outbox_event (
+                id, aggregate_type, aggregate_id, type, payload,
+                created_at, sent, version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, event.getId(), event.getAggregateType(), event.getAggregateId(),
-                event.getType(), event.getPayload(), event.getCreatedAt(), event.isSent());
+                event.getType(), event.getPayload(), event.getCreatedAt(), event.isSent(), event.getVersion());
     }
 
     public List<OutboxEvent> fetchUnsentEvents(int limit) {
@@ -32,19 +38,27 @@ public class OutboxEventRepository {
             ORDER BY created_at
             LIMIT ?
             FOR UPDATE SKIP LOCKED
-        """, new Object[]{limit}, (rs, rowNum) -> new OutboxEvent(
-                UUID.fromString(rs.getString("id")),
-                rs.getString("aggregate_type"),
-                rs.getObject("aggregate_id", UUID.class),
-                rs.getString("type"),
-                rs.getString("payload"),
-                rs.getTimestamp("created_at").toInstant(),
-                rs.getBoolean("sent")
-        ));
+        """, new Object[]{limit}, (rs, rowNum) -> {
+            OutboxEvent event = new OutboxEvent(
+                    UUID.fromString(rs.getString("id")),
+                    rs.getString("aggregate_type"),
+                    rs.getObject("aggregate_id", UUID.class),
+                    rs.getString("type"),
+                    rs.getString("payload"),
+                    rs.getTimestamp("created_at").toInstant(),
+                    rs.getBoolean("sent")
+            );
+            event.setVersion(rs.getInt("version"));
+            return event;
+        });
     }
 
-    public void markAsSent(UUID id) {
-        jdbcTemplate.update("UPDATE outbox_event SET sent = TRUE WHERE id = ?", id);
+    public boolean markAsSent(UUID id, int currentVersion) {
+        int updated = jdbcTemplate.update("""
+            UPDATE outbox_event
+            SET sent = TRUE, version = version + 1
+            WHERE id = ? AND version = ?
+        """, id, currentVersion);
+        return updated > 0;
     }
 }
-

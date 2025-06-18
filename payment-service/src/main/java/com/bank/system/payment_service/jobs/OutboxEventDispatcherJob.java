@@ -27,8 +27,8 @@ public class OutboxEventDispatcherJob {
 
     @Autowired
     public OutboxEventDispatcherJob(OutboxEventRepository outboxRepository,
-                                 ObjectMapper objectMapper,
-                                 PaymentProducer paymentProducer) {
+                                    ObjectMapper objectMapper,
+                                    PaymentProducer paymentProducer) {
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.paymentProducer = paymentProducer;
@@ -46,10 +46,14 @@ public class OutboxEventDispatcherJob {
                         paymentProducer.sendPaymentInitiatedEvent(payload)
                                 .whenComplete((result, ex) -> {
                                     if (ex == null) {
-                                        log.info("Sent outbox event {} PaymentInitiatedEvent", event.getId());
-                                        outboxRepository.markAsSent(event.getId());
+                                        boolean success = outboxRepository.markAsSent(event.getId(), event.getVersion());
+                                        if (success) {
+                                            log.info("Marked as sent: PaymentInitiatedEvent {}", event.getId());
+                                        } else {
+                                            log.warn("Version conflict: PaymentInitiatedEvent {} was already updated", event.getId());
+                                        }
                                     } else {
-                                        log.error("Failed to send PaymentInitiatedEvent outbox event {}", event.getId(), ex);
+                                        log.error("Failed to send PaymentInitiatedEvent {}", event.getId(), ex);
                                     }
                                 });
                     }
@@ -58,9 +62,14 @@ public class OutboxEventDispatcherJob {
                         paymentProducer.sendPaymentCompletedEvent(payload)
                                 .whenComplete((result, ex) -> {
                                     if (ex == null) {
-                                        outboxRepository.markAsSent(event.getId());
+                                        boolean success = outboxRepository.markAsSent(event.getId(), event.getVersion());
+                                        if (success) {
+                                            log.info("Marked as sent: PaymentCompletedEvent {}", event.getId());
+                                        } else {
+                                            log.warn("Version conflict: PaymentCompletedEvent {} was already updated", event.getId());
+                                        }
                                     } else {
-                                        log.error("Failed to send PaymentCompletedEvent outbox event {}", event.getId(), ex);
+                                        log.error("Failed to send PaymentCompletedEvent {}", event.getId(), ex);
                                     }
                                 });
                     }
@@ -69,9 +78,14 @@ public class OutboxEventDispatcherJob {
                         paymentProducer.sendReceiverCreditRequestEvent(payload)
                                 .whenComplete((result, ex) -> {
                                     if (ex == null) {
-                                        outboxRepository.markAsSent(event.getId());
+                                        boolean success = outboxRepository.markAsSent(event.getId(), event.getVersion());
+                                        if (success) {
+                                            log.info("Marked as sent: ReceiverCreditRequestEvent {}", event.getId());
+                                        } else {
+                                            log.warn("Version conflict: ReceiverCreditRequestEvent {} was already updated", event.getId());
+                                        }
                                     } else {
-                                        log.error("Failed to send ReceiverCreditRequestEvent outbox event {}", event.getId(), ex);
+                                        log.error("Failed to send ReceiverCreditRequestEvent {}", event.getId(), ex);
                                     }
                                 });
                     }
@@ -80,9 +94,14 @@ public class OutboxEventDispatcherJob {
                         paymentProducer.sendCompensatePaymentEvent(payload)
                                 .whenComplete((result, ex) -> {
                                     if (ex == null) {
-                                        outboxRepository.markAsSent(event.getId());
+                                        boolean success = outboxRepository.markAsSent(event.getId(), event.getVersion());
+                                        if (success) {
+                                            log.info("Marked as sent: CompensatePaymentEvent {}", event.getId());
+                                        } else {
+                                            log.warn("Version conflict: CompensatePaymentEvent {} was already updated", event.getId());
+                                        }
                                     } else {
-                                        log.error("Failed to send CompensatePaymentEvent outbox event {}", event.getId(), ex);
+                                        log.error("Failed to send CompensatePaymentEvent {}", event.getId(), ex);
                                     }
                                 });
                     }

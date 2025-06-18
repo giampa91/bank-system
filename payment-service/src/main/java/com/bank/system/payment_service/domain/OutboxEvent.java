@@ -12,6 +12,7 @@ public class OutboxEvent {
     private String payload; // serialized JSON
     private Instant createdAt;
     private boolean sent;
+    private int version;
 
     public OutboxEvent(UUID id, String aggregateType, UUID aggregateId, String type,
                        String payload, Instant createdAt, boolean sent) {
@@ -78,5 +79,13 @@ public class OutboxEvent {
 
     public void setSent(boolean sent) {
         this.sent = sent;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 }
