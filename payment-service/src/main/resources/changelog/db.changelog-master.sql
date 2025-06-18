@@ -14,3 +14,14 @@ CREATE TABLE payment (
 );
 
 --rollback DROP TABLE payment;
+
+CREATE TABLE outbox_event (
+    id UUID PRIMARY KEY,
+    aggregate_type TEXT NOT NULL,
+    aggregate_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+    sent BOOLEAN DEFAULT FALSE
+);
+

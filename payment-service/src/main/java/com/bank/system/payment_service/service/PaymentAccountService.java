@@ -1,16 +1,21 @@
 package com.bank.system.payment_service.service;
 
 import com.bank.system.dtos.dto.*;
+import com.bank.system.payment_service.domain.OutboxEvent;
 import com.bank.system.payment_service.domain.Payment;
 import com.bank.system.payment_service.domain.PaymentStatus;
 import com.bank.system.payment_service.kafka.PaymentProducer;
+import com.bank.system.payment_service.repository.OutboxEventRepository;
 import com.bank.system.payment_service.repository.PaymentRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -19,12 +24,16 @@ public class PaymentAccountService {
     private static final Logger log = LoggerFactory.getLogger(PaymentAccountService.class);
 
     private final PaymentRepository paymentRepository;
+    private final OutboxEventRepository outboxEventRepository;
     private final PaymentProducer paymentProducer;
+    private final ObjectMapper objectMapper;
 
-    public PaymentAccountService(PaymentRepository paymentRepository,
-                                 PaymentProducer paymentProducer) {
+    public PaymentAccountService(PaymentRepository paymentRepository, OutboxEventRepository outboxEventRepository,
+                                 PaymentProducer paymentProducer, ObjectMapper objectMapper) {
         this.paymentRepository = paymentRepository;
+        this.outboxEventRepository = outboxEventRepository;
         this.paymentProducer = paymentProducer;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -41,14 +50,30 @@ public class PaymentAccountService {
                         return paymentRepository.save(payment)
                                 .thenCompose(savedPayment -> {
                                     PaymentInitiatedEvent event = mapToPaymentInitiatedEvent(savedPayment);
-                                    return paymentProducer.sendPaymentInitiatedEvent(event)
-                                            .thenApply(sendResult -> {
-                                                log.info("Payment {} initiated and event published.", savedPayment.getId());
-                                                return savedPayment;
-                                            });
+                                    String eventPayload = null;
+                                    try {
+                                        eventPayload = objectMapper.writeValueAsString(event);
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    saveEvent(savedPayment, eventPayload);
+                                    return CompletableFuture.completedFuture(payment);
                                 });
                     }
                 });
+    }
+
+    private void saveEvent(Payment savedPayment, String payload) {
+        OutboxEvent outboxEvent = new OutboxEvent(
+                UUID.randomUUID(),
+                "Payment",
+                savedPayment.getId(),
+                "PaymentInitiatedEvent",
+                payload,
+                Instant.now(),
+                false
+                );
+        outboxEventRepository.save(outboxEvent);
     }
 
     private static Payment mapPaymentRequestDtoToPayment(PaymentRequestDTO requestDTO) {
@@ -79,8 +104,15 @@ public class PaymentAccountService {
         return paymentRepository.updateStatus(senderDebitedEvent.getPaymentId(), PaymentStatus.SENDER_DEBITED)
                 .thenAccept(updatedPaymentOpt -> {
                     if (updatedPaymentOpt.isPresent()) {
-                        ReceiverCreditRequestEvent ReceiverCreditRequestEvent = mapPaymentToReceiverCreditRequestEvent(updatedPaymentOpt.get());
-                        paymentProducer.sendReceiverCreditRequestEvent(ReceiverCreditRequestEvent);
+                        Payment payment = updatedPaymentOpt.get();
+                        ReceiverCreditRequestEvent event = mapPaymentToReceiverCreditRequestEvent(payment);
+                        String eventPayload = null;
+                        try {
+                            eventPayload = objectMapper.writeValueAsString(event);
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                        saveEvent(payment, eventPayload);
                         log.info("Payment {} status updated to SENDER_DEBITED. Next: Credit Receiver.", senderDebitedEvent.getPaymentId());
                     } else {
                         log.error("Failed to update payment status to SENDER_DEBITED for paymentId: {}. Payment not found.", senderDebitedEvent.getPaymentId());
