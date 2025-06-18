@@ -32,7 +32,7 @@ public class PaymentController {
      * @return A CompletableFuture that completes with a ResponseEntity containing the initiated Payment.
      */
     @PostMapping("/initiate")
-    public CompletableFuture<ResponseEntity<Payment>> initiatePayment(@Valid @RequestBody PaymentRequestDTO requestDTO) {
+    public ResponseEntity<Payment> initiatePayment(@Valid @RequestBody PaymentRequestDTO requestDTO) {
         return paymentService.initiatePayment(requestDTO);
     }
 
