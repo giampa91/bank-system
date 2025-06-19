@@ -11,8 +11,21 @@ CREATE TABLE account (
 );
 --rollback DROP TABLE account;
 
+CREATE TABLE outbox_event (
+    id UUID PRIMARY KEY,
+    aggregate_type TEXT NOT NULL,
+    aggregate_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+    sent BOOLEAN DEFAULT FALSE,
+    version INTEGER DEFAULT 0
+);
+--rollback DROP TABLE outbox_event;
+
 INSERT INTO account (account_number, user_id, balance, created_at) VALUES
 ('ACC-001-A', 101, 1500.75, CURRENT_TIMESTAMP());
 
 INSERT INTO account (account_number, user_id, balance, created_at) VALUES
 ('ACC-002-B', 102, 2300.50, CURRENT_TIMESTAMP());
+
