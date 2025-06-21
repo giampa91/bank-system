@@ -23,6 +23,14 @@ CREATE TABLE outbox_event (
 );
 --rollback DROP TABLE outbox_event;
 
+CREATE TABLE processed_event (
+    event_id UUID PRIMARY KEY,
+    event_type VARCHAR(100) NOT NULL,
+    payload TEXT NOT NULL,
+    processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+--rollback DROP TABLE processed_event;
+
 INSERT INTO account (account_number, user_id, balance, created_at) VALUES
 ('ACC-001-A', 101, 1500.75, CURRENT_TIMESTAMP());
 

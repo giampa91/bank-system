@@ -2,8 +2,9 @@ package com.bank.system.dtos.dto;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.UUID;
 
-public class PaymentRequestDTO {
+public class PaymentRequestDTO extends Event {
     private String senderAccountId;
     private String receiverAccountId;
     private BigDecimal amount;

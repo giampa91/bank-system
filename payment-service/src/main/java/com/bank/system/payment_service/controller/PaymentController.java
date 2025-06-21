@@ -1,17 +1,16 @@
 package com.bank.system.payment_service.controller;
 
-import com.bank.system.dtos.dto.*;
+import com.bank.system.dtos.dto.PaymentRequestDTO;
 import com.bank.system.payment_service.domain.Payment;
-import com.bank.system.payment_service.service.PaymentAccountService;
 import com.bank.system.payment_service.service.PaymentService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.concurrent.CompletableFuture;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/payments")

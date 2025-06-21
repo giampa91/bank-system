@@ -82,7 +82,7 @@
 
 		<dependency>
 			<groupId>com.bank.system</groupId>
-			<artifactId>dtos</artifactId>
+			<artifactId>commons</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 

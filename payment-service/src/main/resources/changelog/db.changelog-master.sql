@@ -26,3 +26,10 @@ CREATE TABLE outbox_event (
     version INTEGER DEFAULT 0
 );
 
+CREATE TABLE processed_event (
+    event_id UUID PRIMARY KEY,
+    event_type VARCHAR(100) NOT NULL,
+    payload TEXT NOT NULL,
+    processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+--rollback DROP TABLE processed_event;

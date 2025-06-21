@@ -1,19 +1,21 @@
 package com.bank.system.dtos.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class DebitFailedEvent {
+public class CompensatePaymentRequestEvent extends Event {
     private UUID paymentId;
     private String accountId;
+    private BigDecimal amount;
     private String reason;
     private Instant timestamp;
 
-    public DebitFailedEvent() {
+    public CompensatePaymentRequestEvent() {
     }
 
-    public DebitFailedEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
+    public CompensatePaymentRequestEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
         this.reason = reason;
@@ -56,23 +58,32 @@ public class DebitFailedEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DebitFailedEvent that = (DebitFailedEvent) o;
+        CompensatePaymentRequestEvent that = (CompensatePaymentRequestEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
                 Objects.equals(reason, that.reason) &&
                 Objects.equals(timestamp, that.timestamp);
     }
 
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(paymentId, accountId, reason, timestamp);
+        return Objects.hash(paymentId, accountId, amount, reason, timestamp);
     }
 
     @Override
     public String toString() {
-        return "DebitFailedEvent{" +
+        return "CompensatePaymentEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", accountId='" + accountId + '\'' +
+                ", amount=" + amount +
                 ", reason='" + reason + '\'' +
                 ", timestamp=" + timestamp +
                 '}';

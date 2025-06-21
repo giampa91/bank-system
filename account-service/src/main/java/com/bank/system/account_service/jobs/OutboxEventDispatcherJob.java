@@ -34,7 +34,7 @@ public class OutboxEventDispatcherJob {
         this.accountProducer = accountProducer;
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 1000)
     public void dispatchEvents() {
         List<OutboxEvent> events = outboxRepository.fetchUnsentEvents(10);
         for (OutboxEvent event : events) {
@@ -59,6 +59,10 @@ public class OutboxEventDispatcherJob {
                     case COMPENSATE_PAYMENT_EVENT -> {
                         CompensatePaymentEvent payload = objectMapper.readValue(event.getPayload(), CompensatePaymentEvent.class);
                         future = accountProducer.sendCompensatePaymentEvent(payload);
+                    }
+                    case RECEIVER_CREDIT_FAILED_EVENT -> {
+                        CreditFailedEvent payload = objectMapper.readValue(event.getPayload(), CreditFailedEvent.class);
+                        future = accountProducer.sendSenderCreditedFailedEvent(payload);
                     }
                     default -> {
                         log.warn("Unknown outbox event type {} for event {}", event.getType(), event.getId());

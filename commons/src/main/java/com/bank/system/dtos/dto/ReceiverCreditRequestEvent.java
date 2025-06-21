@@ -5,20 +5,20 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class SenderDebitedEvent {
+public class ReceiverCreditRequestEvent extends Event {
     private UUID paymentId;
     private String accountId;
-    private BigDecimal debitedAmount;
+    private BigDecimal creditedAmount;
     private String currency;
     private Instant timestamp;
 
-    public SenderDebitedEvent() {
+    public ReceiverCreditRequestEvent() {
     }
 
-    public SenderDebitedEvent(UUID paymentId, String accountId, BigDecimal debitedAmount, String currency, Instant timestamp) {
+    public ReceiverCreditRequestEvent(UUID paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
-        this.debitedAmount = debitedAmount;
+        this.creditedAmount = creditedAmount;
         this.currency = currency;
         this.timestamp = timestamp;
     }
@@ -39,12 +39,12 @@ public class SenderDebitedEvent {
         this.accountId = accountId;
     }
 
-    public BigDecimal getDebitedAmount() {
-        return debitedAmount;
+    public BigDecimal getCreditedAmount() {
+        return creditedAmount;
     }
 
-    public void setDebitedAmount(BigDecimal debitedAmount) {
-        this.debitedAmount = debitedAmount;
+    public void setCreditedAmount(BigDecimal creditedAmount) {
+        this.creditedAmount = creditedAmount;
     }
 
     public String getCurrency() {
@@ -67,25 +67,25 @@ public class SenderDebitedEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SenderDebitedEvent that = (SenderDebitedEvent) o;
+        ReceiverCreditRequestEvent that = (ReceiverCreditRequestEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
-                Objects.equals(debitedAmount, that.debitedAmount) &&
+                Objects.equals(creditedAmount, that.creditedAmount) &&
                 Objects.equals(currency, that.currency) &&
                 Objects.equals(timestamp, that.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(paymentId, accountId, debitedAmount, currency, timestamp);
+        return Objects.hash(paymentId, accountId, creditedAmount, currency, timestamp);
     }
 
     @Override
     public String toString() {
-        return "SenderDebitedEvent{" +
+        return "ReceiverCreditedEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", accountId='" + accountId + '\'' +
-                ", debitedAmount=" + debitedAmount +
+                ", creditedAmount=" + creditedAmount +
                 ", currency='" + currency + '\'' +
                 ", timestamp=" + timestamp +
                 '}';

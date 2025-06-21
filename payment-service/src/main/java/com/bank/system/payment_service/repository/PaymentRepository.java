@@ -72,6 +72,24 @@ public class PaymentRepository {
         }
     }
 
+    public Optional<Payment> findByIdForUpdate(UUID id) {
+        String sql = "SELECT id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at FROM payment WHERE id = ? FOR UPDATE";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToPayment(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            log.error("Error finding payment by ID {}: {}", id, e.getMessage());
+            throw new RuntimeException("Failed to find payment by ID", e);
+        }
+    }
+
     public Optional<Payment> findByIdempotencyKeyId(String idempotencyKey) {
         String sql = "SELECT id, sender_account_id, receiver_account_id, amount, currency, status, idempotency_key, created_at, updated_at FROM payment WHERE idempotency_key = ?";
         try (Connection conn = dataSource.getConnection();

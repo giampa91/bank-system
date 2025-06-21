@@ -34,7 +34,7 @@ public class OutboxEventDispatcherJob {
         this.paymentProducer = paymentProducer;
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 1000)
     public void dispatchEvents() {
         List<OutboxEvent> events = outboxRepository.fetchUnsentEvents(10);
 

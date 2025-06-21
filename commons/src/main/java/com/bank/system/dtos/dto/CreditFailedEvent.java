@@ -1,25 +1,22 @@
 package com.bank.system.dtos.dto;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ReceiverCreditRequestEvent {
+public class CreditFailedEvent extends Event  {
     private UUID paymentId;
     private String accountId;
-    private BigDecimal creditedAmount;
-    private String currency;
+    private String reason;
     private Instant timestamp;
 
-    public ReceiverCreditRequestEvent() {
+    public CreditFailedEvent() {
     }
 
-    public ReceiverCreditRequestEvent(UUID paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
+    public CreditFailedEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
-        this.creditedAmount = creditedAmount;
-        this.currency = currency;
+        this.reason = reason;
         this.timestamp = timestamp;
     }
 
@@ -39,20 +36,12 @@ public class ReceiverCreditRequestEvent {
         this.accountId = accountId;
     }
 
-    public BigDecimal getCreditedAmount() {
-        return creditedAmount;
+    public String getReason() {
+        return reason;
     }
 
-    public void setCreditedAmount(BigDecimal creditedAmount) {
-        this.creditedAmount = creditedAmount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public Instant getTimestamp() {
@@ -67,26 +56,24 @@ public class ReceiverCreditRequestEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ReceiverCreditRequestEvent that = (ReceiverCreditRequestEvent) o;
+        CreditFailedEvent that = (CreditFailedEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
-                Objects.equals(creditedAmount, that.creditedAmount) &&
-                Objects.equals(currency, that.currency) &&
+                Objects.equals(reason, that.reason) &&
                 Objects.equals(timestamp, that.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(paymentId, accountId, creditedAmount, currency, timestamp);
+        return Objects.hash(paymentId, accountId, reason, timestamp);
     }
 
     @Override
     public String toString() {
-        return "ReceiverCreditedEvent{" +
+        return "CreditFailedEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", accountId='" + accountId + '\'' +
-                ", creditedAmount=" + creditedAmount +
-                ", currency='" + currency + '\'' +
+                ", reason='" + reason + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
     }

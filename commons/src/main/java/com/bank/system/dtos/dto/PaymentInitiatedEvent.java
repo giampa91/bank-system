@@ -5,23 +5,25 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class PaymentCompletedEvent {
+public class PaymentInitiatedEvent extends Event {
     private UUID paymentId;
     private String senderAccountId;
     private String receiverAccountId;
     private BigDecimal amount;
     private String currency;
+    private String idempotencyKey;
     private Instant timestamp;
 
-    public PaymentCompletedEvent() {
+    public PaymentInitiatedEvent() {
     }
 
-    public PaymentCompletedEvent(UUID paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, Instant timestamp) {
+    public PaymentInitiatedEvent(UUID paymentId, String senderAccountId, String receiverAccountId, BigDecimal amount, String currency, String idempotencyKey, Instant timestamp) {
         this.paymentId = paymentId;
         this.senderAccountId = senderAccountId;
         this.receiverAccountId = receiverAccountId;
         this.amount = amount;
         this.currency = currency;
+        this.idempotencyKey = idempotencyKey;
         this.timestamp = timestamp;
     }
 
@@ -65,6 +67,14 @@ public class PaymentCompletedEvent {
         this.currency = currency;
     }
 
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
     public Instant getTimestamp() {
         return timestamp;
     }
@@ -77,30 +87,31 @@ public class PaymentCompletedEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PaymentCompletedEvent that = (PaymentCompletedEvent) o;
+        PaymentInitiatedEvent that = (PaymentInitiatedEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(senderAccountId, that.senderAccountId) &&
                 Objects.equals(receiverAccountId, that.receiverAccountId) &&
                 Objects.equals(amount, that.amount) &&
                 Objects.equals(currency, that.currency) &&
+                Objects.equals(idempotencyKey, that.idempotencyKey) &&
                 Objects.equals(timestamp, that.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(paymentId, senderAccountId, receiverAccountId, amount, currency, timestamp);
+        return Objects.hash(paymentId, senderAccountId, receiverAccountId, amount, currency, idempotencyKey, timestamp);
     }
 
     @Override
     public String toString() {
-        return "PaymentCompletedEvent{" +
+        return "PaymentInitiatedEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", senderAccountId='" + senderAccountId + '\'' +
                 ", receiverAccountId='" + receiverAccountId + '\'' +
                 ", amount=" + amount +
                 ", currency='" + currency + '\'' +
+                ", idempotencyKey='" + idempotencyKey + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
     }
 }
-

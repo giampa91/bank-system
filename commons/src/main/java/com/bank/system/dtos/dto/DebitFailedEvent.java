@@ -4,16 +4,16 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CreditFailedEvent {
+public class DebitFailedEvent extends Event {
     private UUID paymentId;
     private String accountId;
     private String reason;
     private Instant timestamp;
 
-    public CreditFailedEvent() {
+    public DebitFailedEvent() {
     }
 
-    public CreditFailedEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
+    public DebitFailedEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
         this.reason = reason;
@@ -56,7 +56,7 @@ public class CreditFailedEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CreditFailedEvent that = (CreditFailedEvent) o;
+        DebitFailedEvent that = (DebitFailedEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
                 Objects.equals(reason, that.reason) &&
@@ -70,7 +70,7 @@ public class CreditFailedEvent {
 
     @Override
     public String toString() {
-        return "CreditFailedEvent{" +
+        return "DebitFailedEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", accountId='" + accountId + '\'' +
                 ", reason='" + reason + '\'' +

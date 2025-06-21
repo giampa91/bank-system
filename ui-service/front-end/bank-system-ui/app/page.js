@@ -1,6 +1,6 @@
 'use client'; // This directive makes this component a Client Component
 
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
 
 // --- API Base URL ---
 // In a real application, this would be an environment variable.
@@ -88,20 +88,53 @@ export default function Home() {
   const [paymentRecipientId, setPaymentRecipientId] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
 
-  // --- useEffect to load user from localStorage on initial render ---
+  // --- Helper function to refresh account data ---
+  const refreshAccountData = useCallback(async (accountNumber) => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await fetchAccountDetails(accountNumber);
+      const accountInfo = response.data;
+      const updatedUser = {
+        id: accountInfo.id,
+        name: accountInfo.name,
+        balance: accountInfo.balance,
+        transactions: accountInfo.transactions,
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedUser));
+      return updatedUser; // Return the updated user
+    } catch (error) {
+      console.error("Failed to refresh account data:", error);
+      setMessage(`Failed to load account data: ${error.message}`);
+      setCurrentUser(null);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      setCurrentPage('login'); // Redirect to login on refresh failure
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // --- useEffect to load user from localStorage and refresh data on initial render ---
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedUser) {
         const user = JSON.parse(storedUser);
-        setCurrentUser(user);
-        setCurrentPage('dashboard'); // Go directly to dashboard if user is logged in
+        // Instead of directly setting, refresh the data from the API
+        refreshAccountData(user.id).then(updatedUser => {
+          if (updatedUser) {
+            setCurrentPage('dashboard');
+          }
+        });
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage:", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear potentially corrupted data
+      setCurrentPage('login'); // Ensure user goes back to login if localStorage is bad
     }
-  }, []); // Empty dependency array means this runs once on mount
+  }, [refreshAccountData]); // Depend on refreshAccountData
 
   // --- Login Page Logic ---
   const handleLogin = async () => {
@@ -145,9 +178,9 @@ export default function Home() {
         return;
       }
       if (!currentUser || !currentUser.id) {
-          setMessage('Error: Sender account not found.');
-          setLoading(false);
-          return;
+        setMessage('Error: Sender account not found.');
+        setLoading(false);
+        return;
       }
 
       // Generate a random idempotency key for the payment
@@ -165,14 +198,7 @@ export default function Home() {
 
       // Refresh dashboard data to reflect the new balance and transactions
       // This is crucial as payment changes the sender's balance and adds a transaction
-      const dashboardResponse = await fetchAccountDetails(currentUser.id);
-      const updatedUser = {
-        ...currentUser, // Keep original user info (name, id)
-        balance: dashboardResponse.data.balance,
-        transactions: dashboardResponse.data.transactions,
-      };
-      setCurrentUser(updatedUser);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedUser)); // Update localStorage
+      await refreshAccountData(currentUser.id); // Use the new refresh function
 
       // Clear payment form fields
       setPaymentRecipientId('');

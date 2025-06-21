@@ -5,20 +5,21 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CompensatePaymentRequestEvent {
+public class ReceiverCreditEvent extends Event {
     private UUID paymentId;
     private String accountId;
-    private BigDecimal amount;
-    private String reason;
+    private BigDecimal creditedAmount;
+    private String currency;
     private Instant timestamp;
 
-    public CompensatePaymentRequestEvent() {
+    public ReceiverCreditEvent() {
     }
 
-    public CompensatePaymentRequestEvent(UUID paymentId, String accountId, String reason, Instant timestamp) {
+    public ReceiverCreditEvent(UUID paymentId, String accountId, BigDecimal creditedAmount, String currency, Instant timestamp) {
         this.paymentId = paymentId;
         this.accountId = accountId;
-        this.reason = reason;
+        this.creditedAmount = creditedAmount;
+        this.currency = currency;
         this.timestamp = timestamp;
     }
 
@@ -38,12 +39,20 @@ public class CompensatePaymentRequestEvent {
         this.accountId = accountId;
     }
 
-    public String getReason() {
-        return reason;
+    public BigDecimal getCreditedAmount() {
+        return creditedAmount;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setCreditedAmount(BigDecimal creditedAmount) {
+        this.creditedAmount = creditedAmount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public Instant getTimestamp() {
@@ -58,33 +67,26 @@ public class CompensatePaymentRequestEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CompensatePaymentRequestEvent that = (CompensatePaymentRequestEvent) o;
+        ReceiverCreditEvent that = (ReceiverCreditEvent) o;
         return Objects.equals(paymentId, that.paymentId) &&
                 Objects.equals(accountId, that.accountId) &&
-                Objects.equals(reason, that.reason) &&
+                Objects.equals(creditedAmount, that.creditedAmount) &&
+                Objects.equals(currency, that.currency) &&
                 Objects.equals(timestamp, that.timestamp);
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(paymentId, accountId, amount, reason, timestamp);
+        return Objects.hash(paymentId, accountId, creditedAmount, currency, timestamp);
     }
 
     @Override
     public String toString() {
-        return "CompensatePaymentEvent{" +
+        return "ReceiverCreditedEvent{" +
                 "paymentId='" + paymentId + '\'' +
                 ", accountId='" + accountId + '\'' +
-                ", amount=" + amount +
-                ", reason='" + reason + '\'' +
+                ", creditedAmount=" + creditedAmount +
+                ", currency='" + currency + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
     }
